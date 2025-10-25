@@ -1,0 +1,141 @@
+<!-- login เข้าสู่ระบบ -->
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <title>เข้าสู่ระบบ</title>
+  <%- include('partials/head') %>
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --ring:#e5e7eb;
+      --ink:#0f172a;
+      --muted:#6c757d;
+      --brand:#0d6efd;
+    }
+    *{box-sizing:border-box}
+    body{
+      font-family:'Prompt',sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      background-image:
+        radial-gradient(900px 160px at 0% -10%, rgba(13,110,253,.08), transparent 60%),
+        radial-gradient(700px 140px at 100% -20%, rgba(13,110,253,.08), transparent 60%);
+      background-attachment: fixed;
+    }
+    .wrap{max-width:480px;margin:80px auto 40px;padding:0 12px}
+    .cardx{
+      background:var(--card);
+      border:1px solid var(--ring);
+      border-radius:16px;
+      box-shadow:0 10px 28px rgba(0,0,0,.06);
+      overflow:hidden;
+    }
+    .card-head{
+      padding:18px 20px;
+      border-bottom:1px solid var(--ring);
+      background:linear-gradient(180deg, rgba(13,110,253,.06), rgba(255,255,255,0));
+      text-align:center;
+    }
+    .title{font-weight:700;margin:0}
+    .sub{color:var(--muted);font-size:.95rem}
+    .card-body{padding:22px}
+
+    /* ====== form-floating ปรับ padding ให้ label ไม่ทับ icon ====== */
+    .form-floating>.form-control{border-radius:12px}
+    .input-icon{
+      position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#6c757d;
+    }
+    .with-icon .form-control{
+      padding-left:45px; /* เว้นให้ icon */
+    }
+    .with-icon label{
+      left:40px; /* เลื่อน label ไปขวา */
+    }
+
+    .btn-brand{
+      background:var(--brand);border:none;border-radius:12px;font-weight:700;
+    }
+    .btn-brand:hover{filter:brightness(.98)}
+    .links{color:var(--muted);text-align:center}
+    .divider{
+      display:flex;align-items:center;gap:10px;color:#adb5bd;font-size:.9rem;margin:8px 0 0;
+    }
+    .divider::before,.divider::after{
+      content:"";flex:1;height:1px;background:var(--ring);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="cardx">
+      <div class="card-head">
+        <h3 class="title">เข้าสู่ระบบ</h3>
+        <div class="sub">กรอกอีเมลและรหัสนักศึกษา/บัตรประชาชน</div>
+      </div>
+
+      <div class="card-body">
+        <% if (typeof error !== 'undefined' && error) { %>
+          <div class="alert alert-danger d-flex align-items-center" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <div><%= error %></div>
+          </div>
+        <% } %>
+
+        <!-- Form -->
+        <form method="post" action="/login" class="vstack gap-3 needs-validation" novalidate>
+          <div class="form-floating position-relative with-icon">
+            <i class="bi bi-envelope input-icon"></i>
+            <input class="form-control" id="email" type="email" name="email" placeholder="name@example.com" required />
+            <label for="email">อีเมล</label>
+            <div class="invalid-feedback">กรุณากรอกอีเมลให้ถูกต้อง</div>
+          </div>
+
+          <div class="form-floating position-relative with-icon">
+            <i class="bi bi-person-badge input-icon"></i>
+            <input class="form-control" id="code" type="text" name="code"
+                   placeholder="รหัสนักศึกษา / เลขบัตรประชาชน" required />
+            <label for="code">รหัสนักศึกษา / เลขบัตรประชาชน</label>
+            <div class="invalid-feedback">กรุณากรอกรหัสนักศึกษา/บัตรประชาชน</div>
+          </div>
+
+          <button class="btn btn-brand w-100 py-2" type="submit">
+            <span class="me-1">เข้าสู่ระบบ</span>
+            <i class="bi bi-box-arrow-in-right"></i>
+          </button>
+        </form>
+
+        <div class="links mt-3">
+          <div class="divider">หรือ</div>
+          <div class="mt-2">
+            <a class="small" href="/register/student">สมัครสมาชิก (นักศึกษา)</a>
+            &nbsp;·&nbsp;
+            <a class="small" href="/register/external">สมัครสมาชิก (บุคคลภายนอก)</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap Bundle -->
+   <script>if('serviceWorker'in navigator)navigator.serviceWorker.register('/public/service-worker.js');</script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Bootstrap validation + กันกดซ้ำ แสดง spinner
+    (() => {
+      const form = document.querySelector('.needs-validation');
+      form?.addEventListener('submit', (e) => {
+        if (!form.checkValidity()) {
+          e.preventDefault(); e.stopPropagation();
+        } else {
+          const btn = form.querySelector('button[type="submit"]');
+          btn.disabled = true;
+          btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>กำลังตรวจสอบ...';
+        }
+        form.classList.add('was-validated');
+      });
+    })();
+  </script>
+   <%- include('partials/footer') %>
+</body>
+</html>

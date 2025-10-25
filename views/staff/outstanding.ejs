@@ -1,0 +1,239 @@
+<%
+    // Helper function สำหรับตรวจสอบว่าเกินกำหนดคืนหรือไม่ (ถ้ามี promised date และวันนั้นผ่านมาแล้ว)
+    const isOverdue = (promisedDateStr) => {
+        if (!promisedDateStr) return false;
+        const promised = new Date(promisedDateStr);
+        const today = new Date();
+        // เซ็ตเวลาให้เป็น 00:00:00 เพื่อเปรียบเทียบเฉพาะวันที่
+        promised.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+        return promised < today;
+    };
+%>
+<%- include('partials/head') %>
+
+<style>
+    /* ========================================================================= */
+    /* =========================== STYLES: TABLE & THEME ======================= */
+    /* ========================================================================= */
+    :root {
+        --brand-green: #1f8a4c;
+        --bg: #f5f7fa;
+        --table-header: #eef2f6; /* Soft blue-gray header */
+        --ink: #1e293b;
+        --overdue-bg: #fef2f2; /* Light red background for overdue rows */
+        --overdue-text: #b91c1c; /* Dark red text */
+        --line: #e4e7eb;
+    }
+    body{font-family:'Prompt',sans-serif;background:var(--bg);color:var(--ink)}
+
+    h3 {
+        font-weight: 700;
+        color: var(--ink);
+        padding: 10px 0;
+        margin-bottom: 25px !important;
+    }
+
+    .table {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden; /* For rounded corners */
+        box-shadow: 0 4px 15px rgba(0,0,0,.05);
+        border: 1px solid var(--line);
+    }
+    .table thead th {
+        background: var(--table-header);
+        color: #374151;
+        font-weight: 600;
+        border-color: #d1d5db;
+        vertical-align: middle;
+        text-align: center;
+        padding: 12px 10px;
+    }
+    .table tbody tr:hover {
+        background: #f8fafc;
+    }
+    .table td, .table th{
+        vertical-align: middle;
+        border-color: var(--line);
+    }
+    
+    /* Highlight for Outstanding Quantity */
+    .outstanding-qty-cell {
+        font-size: 1.1rem;
+        font-weight: 700 !important;
+        color: #dc2626; /* Red for high visibility */
+    }
+
+    /* Overdue Row Styling */
+    .row-overdue {
+        background-color: var(--overdue-bg);
+        border-left: 5px solid var(--overdue-text) !important;
+    }
+    .row-overdue .outstanding-qty-cell {
+        color: #991b1b;
+        font-size: 1.2rem;
+    }
+    .row-overdue .text-muted {
+        color: #991b1b !important;
+    }
+
+    /* Date Input and Button Group */
+    .promise-action-group {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+    .promise-action-group .form-control-sm {
+        border-radius: 8px;
+        padding: 0.35rem 0.5rem;
+        font-size: 0.9rem;
+        border-color: #d1d5db;
+    }
+    .promise-action-group .btn-sm {
+        padding: 0.35rem 10px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        border-radius: 8px;
+    }
+
+    /* Message Below Input */
+    .msg-feedback {
+        font-size: 0.75rem;
+        margin-top: 5px !important;
+        white-space: nowrap;
+    }
+</style>
+
+<div class="container my-4">
+    <h3 class="mb-4"><i class="bi bi-x-octagon-fill me-2 text-danger"></i>รายการค้างคืนทั้งหมด</h3>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle">
+            <thead>
+                <tr>
+                    <th class="text-start" style="width: 200px;">สมาชิก</th>
+                    <th class="text-start">อุปกรณ์</th>
+                    <th class="text-end" style="width: 80px;">ยืม</th>
+                    <th class="text-end" style="width: 80px;">คืนแล้ว</th>
+                    <th class="text-end" style="width: 80px;">คงค้าง</th>
+                    <th style="width: 110px;">ยืมเมื่อ</th>
+                    <th style="min-width: 240px;">นัดคืน / จัดการ</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (!rows || !rows.length) { %>
+                    <tr>
+                        <td colspan="7" class="text-center text-muted p-4">
+                            <i class="bi bi-check-circle-fill me-1"></i> ไม่มีรายการอุปกรณ์ค้างคืน ณ ขณะนี้
+                        </td>
+                    </tr>
+                <% } else { %>
+                    <% rows.forEach(r => { 
+                        const borrowDate = r.borrow_date ? new Date(r.borrow_date) : null;
+                        const promised   = r.promised_return_date ? new Date(r.promised_return_date) : null;
+                        const promisedVal= promised ? promised.toISOString().slice(0,10) : '';
+                        const isRowOverdue = isOverdue(r.promised_return_date);
+                    %>
+                        <tr class="<%= isRowOverdue ? 'row-overdue' : '' %>">
+                            <td class="text-start">
+                                <div class="fw-semibold"><%= r.full_name || 'ไม่ระบุชื่อ' %></div>
+                                <div class="text-muted small">รหัส: <code><%= r.user_id %></code></div>
+                            </td>
+                            <td class="text-start"><%= r.item_name %></td>
+                            <td class="text-end"><%= r.borrowed_qty %></td>
+                            <td class="text-end"><%= r.returned_qty %></td>
+                            <td class="text-end outstanding-qty-cell"><%= r.outstanding_qty %></td>
+                            <td><%= borrowDate ? borrowDate.toISOString().slice(0,10) : '-' %></td>
+
+                            <td>
+                                <div class="promise-action-group">
+                                    <input type="date"
+                                        class="form-control form-control-sm"
+                                        id="date-<%= r.tx_id %>"
+                                        value="<%= promisedVal %>" />
+                                    <button class="btn btn-sm btn-outline-success"
+                                        onclick="savePromise('<%= r.tx_id %>', '<%= r.user_id %>')">
+                                        <i class="bi bi-save-fill"></i> บันทึก
+                                    </button>
+                                </div>
+                                <div class="msg-feedback <%= isRowOverdue ? 'text-danger fw-semibold' : 'text-muted' %>" id="msg-<%= r.tx_id %>">
+                                    <% if (isRowOverdue) { %>
+                                        <i class="bi bi-clock-history me-1"></i> เกินกำหนดนัดคืน!
+                                    <% } else if (promisedVal) { %>
+                                        <i class="bi bi-calendar-check-fill me-1"></i> นัดคืน: <%= promisedVal %>
+                                    <% } else { %>
+                                        — ยังไม่ระบุวันนัดคืน —
+                                    <% } %>
+                                </div>
+                            </td>
+                        </tr>
+                    <% }) %>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    async function savePromise(txId, userId){
+        const inp = document.getElementById('date-' + txId);
+        const msg = document.getElementById('msg-' + txId);
+        const btn = inp.nextElementSibling; // The button next to the input
+        const originalBtnText = btn.innerHTML;
+        const val = (inp?.value || '').trim();
+
+        if (!val){
+            if (confirm('ลบวันนัดคืนของรายการนี้ใช่ไหม?')){
+                return doSave(txId, null, msg, userId, btn, originalBtnText);
+            }
+            return;
+        }
+        await doSave(txId, val, msg, userId, btn, originalBtnText);
+    }
+
+    async function doSave(txId, dateVal, msgEl, userId, btnEl, originalBtnText){
+        // Disable button and show loading state
+        btnEl.disabled = true;
+        btnEl.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> บันทึก...';
+        
+        try{
+            const res = await fetch('/staff/outstanding/promise', {
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ tx_id: txId, date: dateVal })
+            });
+            const data = await res.json().catch(()=>({}));
+            if(!res.ok) throw new Error(data?.error || ('HTTP ' + res.status));
+
+            // อัปเดตข้อความสำเร็จ
+            if (msgEl){
+                msgEl.textContent = dateVal ? ('บันทึกสำเร็จ: ' + dateVal) : 'ลบวันนัดคืนแล้ว';
+                msgEl.classList.remove('text-danger', 'fw-semibold');
+                msgEl.classList.add('text-success');
+            }
+
+            // ✅ เสร็จแล้วเด้งไป "ประวัติ (เจ้าหน้าที่)" ของคนนั้น
+            if (userId){
+                // Delay redirect slightly to show success message
+                setTimeout(() => {
+                     window.location.href = '/staff/history?member=' + encodeURIComponent(userId);
+                }, 500);
+            }
+
+        }catch(e){
+            // Restore button state
+            btnEl.disabled = false;
+            btnEl.innerHTML = originalBtnText;
+
+            if (msgEl){
+                msgEl.textContent = 'บันทึกไม่สำเร็จ: ' + (e.message || e);
+                msgEl.classList.remove('text-muted', 'text-success');
+                msgEl.classList.add('text-danger', 'fw-semibold');
+            } else {
+                alert('บันทึกไม่สำเร็จ: ' + (e.message || e));
+            }
+        }
+    }
+</script>
+<%- include('partials/footer') %>

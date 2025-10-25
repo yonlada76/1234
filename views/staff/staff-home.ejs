@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <title>ระบบยืม–คืนอุปกรณ์กีฬา</title>
+    <%- include('partials/head') %>
+    <style>
+        /* ========================================================================= */
+        /* =========================== STYLES: GLOBAL/VARS ========================= */
+        /* ========================================================================= */
+        :root{
+            --brand: #1f8a4c;
+            --brand-light: #4caf50; /* New: Lighter shade for accents */
+            --brand-dark: #166a39;
+            --bg: #f5f7fa; /* Lighter background */
+            --muted: #6b7280;
+            --line: #e4e7eb;
+            --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.08); /* Stronger but softer shadow */
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+            --border-radius: 12px;
+        }
+        body{
+            font-family:'Prompt', sans-serif;
+            background:var(--bg);
+            color:#1e293b; /* Darker text for better contrast */
+            min-height:100vh;
+        }
+
+        /* ========================================================================= */
+        /* =========================== STYLES: HEADER/NAV ========================== */
+        /* ========================================================================= */
+        .app-header{
+            background: linear-gradient(to right, #ffffff, #f9f9f9); /* Subtle Gradient */
+            box-shadow: var(--shadow-sm);
+            padding: 12px 24px; /* Increased padding */
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--line); /* Clean line under header */
+        }
+        .brand i{ font-size: 24px; color: var(--brand); } /* Larger icon */
+        .brand span{ font-weight: 700; color: #111; font-size: 1.1rem; } /* Bolder brand name */
+
+        .user-chip{
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #eef2f6; /* Light gray background */
+            border: 1px solid #dcdfe4;
+            padding: 8px 15px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            color: #1e293b;
+        }
+        .user-chip small{ color: var(--muted); font-weight: 400; font-size: 0.75rem; }
+        .user-chip i{ font-size: 1.2rem; color: var(--brand); }
+
+        .btn-icon{
+            color: #4b5563; /* Default icon color */
+            font-size: 1.4rem;
+        }
+        .btn-icon:hover{ color: var(--brand); transform: scale(1.1); }
+        .btn-logout{ color: #e53935; font-weight: 600; font-size: 0.95rem; }
+        .btn-logout:hover{ color: #b91c1c; }
+        #notifBadge{ font-size: .7rem; transform: translate(30%, -30%); }
+
+        /* ========================================================================= */
+        /* =========================== STYLES: MAIN CONTENT ======================== */
+        /* ========================================================================= */
+        .hero-card{
+            padding: 24px;
+            border-radius: var(--border-radius);
+            background: #ffffff;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--line);
+        }
+        h1{ font-size: 1.5rem; font-weight: 700; color: #1e293b; }
+        p.text-muted{ color: #9ca3af !important; }
+
+        .menu-grid{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Adjusted for more columns/flexibility */
+            gap: 20px;
+            margin-top: 24px;
+        }
+        .menu-item{
+            text-decoration: none;
+            background: #ffffff;
+            border: 1px solid #d1d5db; /* Softer border */
+            border-radius: 18px; /* Slightly more rounded */
+            padding: 20px 10px;
+            text-align: center;
+            transition: all .3s ease;
+            box-shadow: var(--shadow-sm);
+        }
+        .menu-item:hover{
+            box-shadow: 0 10px 30px rgba(31, 138, 76, 0.15); /* Brand-colored shadow on hover */
+            transform: translateY(-4px) scale(1.02); /* More noticeable lift */
+            border-color: var(--brand-light);
+        }
+        .menu-item i{ font-size: 44px; color: var(--brand); transition: color .3s; }
+        .menu-item:hover i{ color: var(--brand-dark); }
+        .menu-item span{ display: block; font-weight: 700; margin-top: 10px; color: #111; font-size: 1rem; }
+        .menu-item small{ display: block; font-size: .8rem; color: var(--muted); margin-top: 2px; }
+
+        .hint{ color: var(--muted); margin-top: 20px; font-size: .9rem; text-align: center; padding: 10px; background: #f9fafb; border-radius: 8px; }
+
+        /* ========================================================================= */
+        /* =========================== STYLES: OFFCANVAS/MODAL ===================== */
+        /* ========================================================================= */
+        .offcanvas-header{
+            background: var(--brand);
+            color: #fff;
+            border-bottom: none;
+        }
+        .offcanvas-header .btn-close{ filter: invert(1); } /* White close button */
+        .list-group-item{ border-color: #f3f4f6; }
+        .list-group-item:hover{ background-color: #f9fafb; }
+        #notifList .badge{ font-weight: 500; padding: 0.35em 0.6em; }
+
+        #reader{ width: 100%; max-width: 480px; margin: auto; }
+        #reader video{ width: 100%; border-radius: 12px; background: #000; border: 4px solid var(--brand-light); }
+        .modal-header{ border-bottom: 1px solid var(--line); }
+
+        /* Button Adjustments */
+        .btn-outline-secondary{ border-color: #d0d5d9; color: #374151; }
+        .btn-outline-secondary:hover{ background: #f2f4f6; color: #111; border-color: #b0b4b8; }
+        .btn-outline-danger{ border-color: #ef4444; color: #ef4444; }
+        .btn-outline-danger:hover{ background: #ef4444; color: #fff; }
+        .btn-primary{ background-color: var(--brand); border-color: var(--brand); }
+        .btn-primary:hover{ background-color: var(--brand-dark); border-color: var(--brand-dark); }
+        .text-bg-success{ background-color: var(--brand) !important; }
+    </style>
+</head>
+<body>
+<header class="app-header">
+    <div class="container container-narrow d-flex align-items-center justify-content-between">
+        <div class="brand d-flex align-items-center gap-2">
+            <i class="bi bi-basket2-fill"></i><span>ระบบยืม–คืน & ฟิตเนส</span>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <div class="user-chip d-none d-md-flex">
+                <i class="bi bi-person-circle"></i>
+                <div>
+                    <div><%= user?.name || 'ไม่ทราบชื่อ' %></div>
+                    <small><%= (typeof userEmail !== 'undefined' && userEmail) ? userEmail : '-' %> • <%= ((user && user.role) || 'staff').toUpperCase() %></small>
+                </div>
+            </div>
+            <button id="btnOpenNotif" class="btn btn-icon" type="button" data-bs-toggle="offcanvas" data-bs-target="#notifPanel" aria-controls="notifPanel" title="แจ้งเตือน">
+                <i class="bi bi-bell"></i>
+                <span id="notifBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">0</span>
+            </button>
+            <form action="/staff-login" method="post" class="m-0">
+                <button class="btn btn-logout d-flex align-items-center gap-1" type="submit"><i class="bi bi-box-arrow-right"></i><span class="d-none d-sm-inline">ออกจากระบบ</span></button>
+            </form>
+        </div>
+    </div>
+</header>
+
+<main class="container container-narrow my-5">
+    <div class="hero-card">
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <span class="badge rounded-pill text-bg-success"><i class="bi bi-person-badge me-1"></i> เจ้าหน้าที่</span>
+        </div>
+        <h1 class="mb-2">ระบบการยืม–คืนอุปกรณ์กีฬาและการเข้าใช้ฟิตเน็ต</h1>
+        <p class="text-muted mb-4">สวัสดี, <strong><%= user?.name || '-' %></strong> (<%= user?.role || 'staff' %>) — <%= userEmail || '-' %></p>
+        <p class="text-muted mb-4">แตะเมนู **การยืม/การคืน/ฟิตเนส** เพื่อเริ่มทำรายการด้วยการสแกน **QR Code** ของสมาชิก</p>
+
+        <div class="menu-grid">
+            <a href="#" class="menu-item" data-next="/borrow">
+                <i class="bi bi-file-earmark-plus"></i>
+                <span>การยืม</span>
+                <small>บันทึกรายการยืมใหม่</small>
+            </a>
+            <a href="#" class="menu-item" data-next="/return">
+                <i class="bi bi-clipboard-check"></i>
+                <span>การคืน</span>
+                <small>รับอุปกรณ์คืน</small>
+            </a>
+            <a href="#" class="menu-item" data-next="/fitness">
+                <i class="bi bi-bicycle"></i>
+                <span>ฟิตเนส</span>
+                <small>เช็คอิน/เช็คเอาต์ฟิตเนส</small>
+            </a>
+
+            <a href="/staff/inventory" class="menu-item">
+                <i class="bi bi-box-seam"></i>
+                <span>จัดการอุปกรณ์</span>
+                <small>เพิ่ม/แก้ไข/ดูสต็อก</small>
+            </a>
+            <a href="/members" class="menu-item">
+                <i class="bi bi-people"></i>
+                <span>รายชื่อสมาชิก</span>
+                <small>จัดการบัญชีสมาชิก</small>
+            </a>
+            <a href="/staff/history" class="menu-item">
+                <i class="bi bi-clock-history"></i>
+                <span>ประวัติรายการ</span>
+                <small>ดูรายการยืม-คืนย้อนหลัง</small>
+            </a>
+        </div>
+
+        <div class="hint mt-4">**คำแนะนำ:** เมนูยืม/คืน/ฟิตเนส จะเปิดกล้องเพื่อสแกน QR Code เพื่อระบุสมาชิก</div>
+    </div>
+</main>
+
+<div class="offcanvas offcanvas-end" tabindex="-1" id="notifPanel" aria-labelledby="notifPanelLabel">
+    <div class="offcanvas-header">
+        <h5 id="notifPanelLabel" class="mb-0">ศูนย์แจ้งเตือน</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="ปิด"></button>
+    </div>
+    <div class="offcanvas-body p-0 d-flex flex-column">
+        <div class="p-3 border-bottom d-flex gap-2">
+            <button id="btnRefreshNotif" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-clockwise me-1"></i> รีเฟรช</button>
+            <button id="btnMarkAllRead" class="btn btn-outline-secondary btn-sm"><i class="bi bi-check2-all me-1"></i> อ่านแล้วทั้งหมด</button>
+        </div>
+        <div id="notifList" class="list-group list-group-flush small"></div>
+        <div class="p-3 text-center text-muted small border-top mt-auto">อัปเดตล่าสุด: <span id="notifUpdatedAt">-</span></div>
+    </div>
+</div>
+
+<div class="modal fade" id="scanModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">สแกน QR สมาชิก</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex gap-2 align-items-center mb-3">
+                    <select id="cameraSelect" class="form-select form-select-sm"></select>
+                    <button id="btnRefreshCams" class="btn btn-outline-secondary btn-sm" title="ค้นหากล้องใหม่">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                </div>
+                <div id="reader"></div>
+                <div class="d-flex gap-2 mt-3">
+                    <button id="btnManual" class="btn btn-outline-secondary w-100"><i class="bi bi-keyboard me-1"></i> ป้อนรหัสด้วยตนเอง</button>
+                    <button id="btnStart" class="btn btn-primary w-100"><i class="bi bi-qr-code-scan me-1"></i> เริ่มสแกน</button>
+                    <button id="btnStop" class="btn btn-outline-danger w-100"><i class="bi bi-stop-circle me-1"></i> หยุดกล้อง</button>
+                </div>
+                <small class="text-muted d-block mt-3">ต้องเปิดผ่าน <b>HTTPS</b> หรือ <b>http://localhost</b>/<b>127.0.0.1</b> เท่านั้น เบราว์เซอร์ถึงจะยอมให้ใช้กล้อง</small>
+                <div id="scanError" class="alert alert-warning mt-2 d-none"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode/minified/html5-qrcode.min.js"></script>
+
+<script>
+/* ============== Utils ============== */
+function showScanError(msg){
+    const box=document.getElementById('scanError')||(()=>{const d=document.createElement('div');d.id='scanError';d.className='alert alert-warning mt-2';document.querySelector('#scanModal .modal-body').appendChild(d);return d;})();
+    box.textContent=msg; box.classList.remove('d-none');
+}
+function hideScanError(){const box=document.getElementById('scanError'); if(box){box.textContent=''; box.classList.add('d-none');}}
+function isSecureContextForCamera(){return location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1'}
+async function ensureHtml5QrcodeLoaded(){return !!window.Html5Qrcode}
+function mapGumError(e){
+    const name=e?.name||e?.message||String(e);
+    if(/NotAllowedError/i.test(name)) return 'เบราว์เซอร์บล็อกสิทธิ์กล้อง — คลิกไอคอน 🔒 ข้าง URL แล้ว Allow Camera';
+    if(/NotFoundError|OverconstrainedError/i.test(name)) return 'ไม่มีกล้องให้ใช้ หรือเลือกอุปกรณ์ไม่ถูก — ลองกด "ค้นหากล้องใหม่" และเลือกกล้อง';
+    if(/NotReadableError|TrackStartError/i.test(name)) return 'เปิดกล้องไม่ได้ (อาจมีแอปอื่นใช้อยู่ เช่น Zoom/Teams) — ปิดแอปที่ใช้กล้องก่อน';
+    if(/SecurityError/i.test(name)) return 'ต้องเปิดผ่าน HTTPS หรือ http://localhost เท่านั้น';
+    return 'เปิดกล้องไม่ได้: '+name;
+}
+
+/* ============== สแกน QR (Html5Qrcode + Fallback: BarcodeDetector) ============== */
+const scanModalEl=document.getElementById('scanModal');
+const scanModal=new bootstrap.Modal(scanModalEl);
+const cameraSelect=document.getElementById('cameraSelect');
+const readerEl=document.getElementById('reader');
+
+let html5Qrcode=null, targetNext=null, handled=false, currentCamId=null;
+// Fallback
+let useBarcodeDetector=false, bd=null, bdStop=true, bdVideo=null, bdStream=null;
+
+// เปิดโมดัลเมื่อคลิกเมนูที่ต้องสแกน (ยังไม่ start)
+document.querySelectorAll('.menu-item[data-next]').forEach(el=>{
+    el.addEventListener('click',e=>{
+        e.preventDefault();
+        targetNext=el.dataset.next; handled=false; hideScanError();
+        scanModal.show();
+    });
+});
+
+scanModalEl.addEventListener('shown.bs.modal', async ()=>{
+    hideScanError();
+    if(!isSecureContextForCamera()){ showScanError('ต้องเปิดผ่าน HTTPS หรือ http://localhost เท่านั้น'); return; }
+    // แค่เตรียมรายชื่อกล้อง (ไม่เริ่มสแกน เพื่อให้มี user gesture ตอนกดเริ่ม)
+    await ensureCameraList();
+});
+
+scanModalEl.addEventListener('hidden.bs.modal', stopScanner);
+
+document.getElementById('btnStart').addEventListener('click', async ()=>{
+    hideScanError();
+    // ขอสิทธิ์ภายใต้ user gesture
+    try{
+        const s=await navigator.mediaDevices.getUserMedia({video:true,audio:false});
+        s.getTracks().forEach(t=>t.stop());
+    }catch(e){ showScanError(mapGumError(e)); return; }
+    await ensureCameraList();
+    await startScanner();
+});
+document.getElementById('btnStop').addEventListener('click', stopScanner);
+document.getElementById('btnRefreshCams').addEventListener('click', ensureCameraList);
+document.getElementById('btnManual').addEventListener('click', async ()=>{
+    const code=prompt('ใส่รหัสสมาชิก/QR:');
+    if(code && targetNext){ await stopScanner(); window.location.replace(`${targetNext}?member=${encodeURIComponent(code.trim())}`); }
+});
+
+/* ---------- รายชื่อกล้อง ---------- */
+async function ensureCameraList(){
+    try{
+        cameraSelect.innerHTML='';
+        try{
+            const s=await navigator.mediaDevices.getUserMedia({video:true,audio:false});
+            s.getTracks().forEach(t=>t.stop());
+        }catch(_){}
+        let cams=[];
+        if(await ensureHtml5QrcodeLoaded()){ try{ cams=await Html5Qrcode.getCameras(); }catch{} }
+        (cams||[]).forEach((c,idx)=>{ const opt=document.createElement('option'); opt.value=c.id; opt.textContent=c.label||`กล้อง ${idx+1}`; cameraSelect.appendChild(opt); });
+        const back=(cams||[]).find(c=>/back|rear|environment/i.test(c.label));
+        cameraSelect.value= back? back.id : (cams && cams[0]?.id) || '';
+        currentCamId=cameraSelect.value || null;
+    }catch(err){ console.error('ensureCameraList error',err); }
+}
+
+/* ---------- เริ่มสแกน ---------- */
+async function startScanner(){
+    if (await ensureHtml5QrcodeLoaded()) {
+        try {
+            if (!html5Qrcode) html5Qrcode = new Html5Qrcode('reader', { verbose: false });
+            try { await html5Qrcode.stop(); } catch (_) {}
+            const cfg = { fps: 10, qrbox: { width: 240, height: 240 }, aspectRatio: 1.33 };
+            const onSuccess = async (decodedText) => {
+                if (handled) return;
+                handled = true;
+                try { await stopScanner(); } catch (_) {}
+                const code = (decodedText || '').trim();
+                window.location.replace(`${targetNext}?member=${encodeURIComponent(code)}`);
+            };
+            if (currentCamId) {
+                await html5Qrcode.start(currentCamId, cfg, onSuccess);
+            } else {
+                await html5Qrcode.start({ facingMode: 'environment' }, cfg, onSuccess);
+            }
+            return;
+        } catch (e) {
+            console.warn('Html5Qrcode start failed:', e);
+            showScanError(mapGumError(e));
+            try { await html5Qrcode.stop(); } catch (_) {}
+        }
+    }
+
+    if (!('BarcodeDetector' in window)) {
+        showScanError('โหลดไลบรารีสแกนไม่สำเร็จ และเบราว์เซอร์ไม่รองรับ BarcodeDetector');
+        return;
+    }
+    try {
+        await startBarcodeDetector();
+    } catch (e) {
+        console.error('BarcodeDetector start failed', e);
+        showScanError(mapGumError(e));
+    }
+}
+
+
+/* ---------- Fallback engine: BarcodeDetector ---------- */
+async function startBarcodeDetector(){
+    stopBarcodeDetector();
+    readerEl.innerHTML='';
+    bdVideo=document.createElement('video');
+    bdVideo.setAttribute('playsinline','true'); bdVideo.setAttribute('autoplay','true'); bdVideo.setAttribute('muted','true');
+    bdVideo.style.width='100%'; bdVideo.style.maxHeight='320px';
+    readerEl.appendChild(bdVideo);
+
+    bdStream=await navigator.mediaDevices.getUserMedia({ video:{facingMode:'environment'}, audio:false });
+    bdVideo.srcObject=bdStream; await bdVideo.play();
+
+    const formats=(await BarcodeDetector.getSupportedFormats?.()) || ['qr_code'];
+    const wantFormats= formats.includes('qr_code')? ['qr_code'] : formats;
+    bd=new BarcodeDetector({ formats: wantFormats });
+    useBarcodeDetector=true; bdStop=false;
+
+    const loop=async ()=>{
+        if(bdStop) return;
+        try{
+            const codes=await bd.detect(bdVideo);
+            if(codes && codes.length && !handled){
+                handled=true; const raw=codes[0]?.rawValue || ''; await stopScanner();
+                window.location.replace(`${targetNext}?member=${encodeURIComponent(raw)}`);
+                return;
+            }
+        }catch(_){}
+        requestAnimationFrame(loop);
+    };
+    loop();
+}
+function stopBarcodeDetector(){
+    bdStop=true;
+    if(bdVideo){ try{ bdVideo.pause(); }catch{}; if(bdVideo.srcObject){ try{ bdVideo.srcObject.getTracks().forEach(t=>t.stop()); }catch{} } bdVideo.srcObject=null; }
+    if(bdStream){ try{ bdStream.getTracks().forEach(t=>t.stop()); }catch{} }
+    bdVideo=null; bdStream=null; bd=null; useBarcodeDetector=false;
+}
+async function stopScanner(){
+    if(html5Qrcode){ try{ await html5Qrcode.stop(); }catch{} }
+    if(useBarcodeDetector){ stopBarcodeDetector(); }
+    readerEl.innerHTML='';
+}
+
+/* ===== Debug ===== */
+(async()=>{
+    console.log('secure?',isSecureContextForCamera(),location.href);
+    console.log('Html5Qrcode loaded?',!!window.Html5Qrcode);
+    console.log('BarcodeDetector supported?','BarcodeDetector' in window);
+})();
+
+/* ========================= ศูนย์แจ้งเตือน ========================= */
+const notifPanel=document.getElementById('notifPanel');
+const notifListEl=document.getElementById('notifList');
+const notifBadgeEl=document.getElementById('notifBadge');
+const notifUpdated=document.getElementById('notifUpdatedAt');
+let notifItems=[]; let pollTimer=null;
+
+async function fetchNotifications(){
+    const res=await fetch('/api/notifications?limit=50',{credentials:'same-origin'});
+    const data=await res.json();
+    notifItems=Array.isArray(data.items)? data.items : [];
+    renderNotifications(); updateBadge();
+    notifUpdated.textContent=new Date(data.now||Date.now()).toLocaleString();
+}
+function renderNotifications(){
+    notifListEl.innerHTML='';
+    if(!notifItems.length){ notifListEl.innerHTML=`<div class="p-4 text-center text-muted">ยังไม่มีแจ้งเตือน</div>`; return; }
+    notifItems.forEach(n=>{
+        const isRead=!!n.read_at;
+        const a=document.createElement('a');
+        a.href='#'; a.className='list-group-item list-group-item-action d-flex justify-content-between align-items-start'; a.dataset.id=n.id;
+        a.innerHTML=`
+            <div class="me-2">
+                <div class="fw-semibold ${isRead?'text-muted':''}">${escapeHTML(n.title||'(ไม่ระบุหัวข้อ)')}</div>
+                <div class="text-muted">${escapeHTML(n.message||'')}</div>
+                <div class="text-muted small mt-1">${new Date(n.created_at).toLocaleString()}</div>
+            </div>
+            <div class="ms-2 text-nowrap">${isRead?'<span class="badge text-bg-secondary">อ่านแล้ว</span>':'<span class="badge text-bg-primary">ใหม่</span>'}</div>`;
+        a.addEventListener('click',ev=>{
+            ev.preventDefault();
+            try{ const meta= n.meta && typeof n.meta==='object' ? n.meta : (n.meta ? JSON.parse(n.meta) : null); if(meta?.goto) window.location.href=meta.goto; }catch(_){}
+        });
+        notifListEl.appendChild(a);
+    });
+}
+function updateBadge(){ const unread=notifItems.filter(n=>!n.read_at).length; if(unread>0){ notifBadgeEl.classList.remove('d-none'); notifBadgeEl.textContent= unread>99?'99+':String(unread); } else { notifBadgeEl.classList.add('d-none'); } }
+async function markAllRead(){
+    const ids=notifItems.filter(n=>!n.read_at).map(n=>n.id); if(!ids.length) return;
+    try{
+        const res=await fetch('/api/notifications/mark-read',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ids}) });
+        if(!res.ok) throw new Error('mark read failed');
+        notifItems=notifItems.map(n=>n.read_at?n:({...n, read_at:new Date().toISOString()})); renderNotifications(); updateBadge();
+    }catch(e){ console.error(e); }
+}
+document.getElementById('btnRefreshNotif').addEventListener('click',fetchNotifications);
+document.getElementById('btnMarkAllRead').addEventListener('click',markAllRead);
+fetchNotifications(); pollTimer=setInterval(fetchNotifications,30000);
+notifPanel.addEventListener('hidden.bs.offcanvas',updateBadge);
+function escapeHTML(s=''){ return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+</script>
+
+<%- include('partials/footer') %>
+</body>
+</html>

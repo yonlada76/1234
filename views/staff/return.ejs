@@ -1,0 +1,224 @@
+<%
+    // รับค่าจาก server
+    const _member  = member || null;
+    const _borrows = Array.isArray(borrows) ? borrows : [];  // ใช้ borrows (ไม่ใช่ loans)
+    // ใช้ Date object เพื่อให้ง่ายต่อการจัดรูปแบบในส่วน EJS
+    const todayDate = new Date();
+    const today    = todayDate.toISOString().slice(0,10); 
+%>
+<!doctype html>
+<html lang="th">
+<head>
+    <title>การคืนอุปกรณ์</title>
+    <%- include('partials/head') %>
+    <style>
+        /* ========================================================================= */
+        /* =========================== STYLES: GLOBAL/VARS ========================= */
+        /* ========================================================================= */
+        :root {
+            --brand-green: #1f8a4c;
+            --brand-yellow: #fbbf24;
+            --brand-yellow-dark: #f59e0b;
+            --bg: #f5f7fa;
+            --card-border: #e2e8f0;
+            --ink: #1e293b;
+            --muted: #64748b;
+            --shadow-md: 0 10px 25px rgba(0, 0, 0, 0.08);
+            --border-radius: 12px;
+        }
+
+        body{font-family:'Prompt',sans-serif;background:var(--bg);color:var(--ink)}
+        .wrap{
+            max-width:550px; /* ขยายความกว้างขึ้นเล็กน้อย */
+            margin:40px auto;
+            background:var(--card);
+            border-radius:20px;
+            box-shadow:var(--shadow-md);
+            padding:30px;
+        }
+        h1{
+            text-align:center;
+            font-weight:700;
+            margin:0 0 20px;
+            color:var(--ink);
+            font-size: 1.8rem;
+        }
+        .header-member {
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 25px;
+        }
+        .header-member .muted{color:#6b7280; margin-bottom: 5px;}
+
+        /* Card ภายใน (รายการยืม) */
+        .card-inner{
+            border:1px solid var(--card-border);
+            border-radius:14px;
+            padding:20px;
+            background:#fff;
+            margin-bottom:20px;
+            transition: box-shadow .2s;
+        }
+        .card-inner:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,.04);
+        }
+        .item-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--brand-green);
+            margin-bottom: 5px;
+        }
+        .item-meta {
+            font-size:.85rem;
+            color:var(--muted);
+            margin-bottom: 4px;
+        }
+        .outstanding-qty {
+            font-weight: 700;
+            color: #dc2626; /* Red for outstanding */
+            font-size: 1rem;
+        }
+
+        /* Form Elements */
+        .form-control,.form-select{
+            border-radius:10px;
+            border:1px solid #d1d5db;
+            padding:.7rem .9rem;
+            font-size: 0.95rem;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 4px;
+        }
+
+        /* Accent Button (ส่งคืน) */
+        .btn-accent{
+            background:var(--brand-yellow);
+            border:none;
+            color:var(--ink);
+            border-radius:10px;
+            padding:.7rem 1rem;
+            font-weight:700;
+            box-shadow:0 6px 15px rgba(251,191,36,.35);
+            transition: all .2s;
+        }
+        .btn-accent:hover {
+            background: var(--brand-yellow-dark);
+            box-shadow:0 4px 12px rgba(251,191,36,.4);
+            transform: translateY(-1px);
+        }
+
+        /* Other Button */
+        .btn-outline-secondary {
+            border-color: #d1d5db;
+            color: #6b7280;
+        }
+        .btn-outline-secondary:hover {
+            background-color: #f3f4f6;
+            color: #1e293b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="wrap">
+            <h1><i class="bi bi-clipboard-check-fill me-2"></i>การคืนอุปกรณ์</h1>
+
+            <% if (typeof message === 'string' && message) { %>
+                <div class="alert alert-warning text-center mb-4">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i> <%= message %> 
+                    <a href="/staff-home" class="alert-link fw-semibold">กลับไปสแกนใหม่</a>
+                </div>
+            <% } %>
+
+            <div class="text-center header-member">
+                <div class="muted">รายการคืนสำหรับสมาชิก:</div>
+                <div class="fw-bold fs-5 text-dark"><i class="bi bi-person-circle me-1 text-primary"></i> <%= _member ? _member.full_name : 'ไม่พบสมาชิก' %></div>
+            </div>
+
+            <% if (!_borrows.length) { %>
+                <div class="alert alert-info text-center">
+                    <i class="bi bi-info-circle-fill me-1"></i> สมาชิกคนนี้ **ไม่มีรายการยืมอุปกรณ์คงค้าง**
+                </div>
+            <% } %>
+
+            <% _borrows.forEach((item, index) => { 
+                const outstanding = Number(item.outstanding_qty || item.qty || 0);
+            %>
+                <div class="card-inner">
+                    <div class="item-title"><%= item.item_name %></div>
+                    <div class="d-flex justify-content-between item-meta mb-2">
+                        <span>ยืมเมื่อ: <%= new Date(item.borrow_date).toLocaleDateString('th-TH') %></span>
+                        <span class="outstanding-qty">คงค้าง: <%= outstanding %> ชิ้น</span>
+                    </div>
+
+                    <form method="post" action="/return/submit" onsubmit="return validateQty(this)">
+                        <input type="hidden" name="tx_id" value="<%= item.tx_id %>">
+                        <input type="hidden" name="member_id" value="<%= _member ? _member.id : '' %>">
+                        <input type="hidden" name="item_name" value="<%= item.item_name %>"> <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label">จำนวนที่จะคืน</label>
+                                <select name="return_qty" class="form-select" data-max="<%= outstanding %>" required>
+                                    <% for (let n=1; n<=outstanding; n++) { %>
+                                        <option value="<%= n %>"><%= n %> ชิ้น</option>
+                                    <% } %>
+                                </select>
+                                <div class="form-text text-danger d-none mt-1" id="qty-error-<%= index %>">จำนวนเกินกว่าคงค้าง</div>
+                            </div>
+
+                            <div class="col-6">
+                                <label class="form-label">วันที่คืน</label>
+                                <input type="date" name="return_date" class="form-control" value="<%= today %>" max="<%= today %>" required>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-accent w-100" type="submit">
+                            <i class="bi bi-reply-fill me-2"></i> ส่งคืนอุปกรณ์
+                        </button>
+                    </form>
+                </div>
+            <% }) %>
+
+            <div class="text-center mt-4">
+                <a class="btn btn-outline-secondary" href="/staff-home">
+                    <i class="bi bi-qr-code-scan me-2"></i> สแกนสมาชิกคนถัดไป
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function validateQty(form){
+            const sel  = form.querySelector('select[name="return_qty"]');
+            const max  = parseInt(sel.dataset.max, 10);
+            const val  = parseInt(sel.value, 10);
+            const help = form.querySelector('.form-text');
+            const itemName = form.querySelector('input[name="item_name"]').value;
+
+            if (val > max) {
+                help.classList.remove('d-none');
+                alert(`ไม่สามารถคืนอุปกรณ์ ${itemName} จำนวน ${val} ชิ้นได้ เพราะคงค้างอยู่เพียง ${max} ชิ้น`);
+                return false;
+            }
+            help.classList.add('d-none');
+            
+            // Optional: Confirmation before submission
+            const confirmMsg = (val === max) 
+                ? `ยืนยันการคืนอุปกรณ์ ${itemName} ทั้งหมด ${val} ชิ้น ใช่หรือไม่?`
+                : `ยืนยันการคืนอุปกรณ์ ${itemName} จำนวน ${val} ชิ้น ใช่หรือไม่?`;
+
+            return confirm(confirmMsg);
+        }
+        
+        // Ensure date input cannot select future dates (max attribute in HTML handles most, but this is a double-check)
+        document.querySelectorAll('input[type="date"]').forEach(input => {
+            if (!input.max) {
+                input.max = new Date().toISOString().slice(0, 10);
+            }
+        });
+    </script>
+    <%- include('partials/footer') %>
+</body>
+</html>

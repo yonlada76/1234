@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="th">
+<head>
+    <title>จัดการผู้ใช้ (Admin)</title>
+    <%- include('../partials/head') %>
+    <style>
+        /* ========================================================================= */
+        /* =========================== STYLES: GLOBAL/VARS ========================= */
+        /* ========================================================================= */
+        :root {
+            --brand: #1f8a4c;
+            --brand-dark: #166a39;
+            --bg: #f5f7fa;
+            --card: #ffffff;
+            --ink: #1e293b;
+            --line: #e4e7eb;
+            --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.08);
+            --border-radius: 12px;
+        }
+
+        body {
+            font-family: 'Prompt', sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+        }
+        .wrap {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 15px;
+        }
+
+        /* Card Style */
+        .card {
+            background: var(--card);
+            border: 1px solid #d1d5db;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        /* Title */
+        h1 {
+            font-weight: 800;
+            margin-bottom: 25px;
+            color: var(--ink);
+        }
+        h5 {
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 15px;
+            font-size: 1.15rem;
+        }
+
+        /* Alerts */
+        .alert {
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        /* =========================== STYLES: CHIP & ROLE (Minor Adjustments) ========================= */
+        .mono {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 0.9rem;
+            color: #4b5563;
+        }
+        .chip {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .chip-member { background: #f1f5f9; color: #475569; }
+        .chip-role-staff { background: #eef2ff; color: #4338ca; }
+        .chip-role-admin { background: #fdf2f8; color: #db2777; }
+        .chip-default { background: #f0fdf4; color: #15803d; }
+
+        /* =========================== STYLES: TABLE & ACTIONS ========================= */
+        .table thead th {
+            background: #f1f5f9;
+            color: #475569;
+            font-weight: 600;
+            border-bottom: 1px solid var(--line);
+        }
+        .table td, .table th {
+            vertical-align: middle;
+            border-top: 1px solid #f8fafc;
+            padding: 12px 10px;
+        }
+        .table-hover tbody tr:hover { background-color: #f7f9fc; }
+        .text-muted-datetime { color: #94a3b8 !important; font-size: 0.85rem; }
+        
+        .action-col { width: 360px; }
+        
+        /* Form Controls */
+        .form-select-sm { border-radius: 6px !important; }
+        .form-control { border-radius: 8px !important; }
+        
+        /* Buttons (Consistent with Brand) */
+        .btn-primary { 
+            background-color: var(--brand); 
+            border-color: var(--brand); 
+            font-weight: 600;
+            transition: background-color .2s;
+        }
+        .btn-primary:hover { 
+            background-color: var(--brand-dark); 
+            border-color: var(--brand-dark); 
+        }
+        .btn-outline-primary {
+            color: var(--brand);
+            border-color: var(--brand);
+        }
+        .btn-outline-primary:hover {
+            background-color: var(--brand);
+            color: white;
+        }
+        .btn-sm {
+            padding: 5px 12px;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+<div class="container wrap">
+    <h1 class="mb-4"><i class="bi bi-people-fill me-2"></i> จัดการผู้ใช้</h1>
+
+    <% if (ok) { %>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-1"></i> <strong>สำเร็จ:</strong> <%= ok %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <% } %>
+    <% if (err) { %>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-1"></i> <strong>ไม่สำเร็จ:</strong> <%= err %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <% } %>
+
+    <div class="card">
+        <h5 class="mb-3"><i class="bi bi-person-plus-fill me-1"></i> สร้าง Staff/Admin แบบด่วน</h5>
+        <form class="row g-3 align-items-end" method="post" action="/admin/users/create" id="formCreate">
+            <div class="col-lg-4 col-md-6">
+                <label class="form-label">ชื่อ-นามสกุล</label>
+                <input name="full_name" class="form-control" placeholder="เช่น Somchai Jaidee" required>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <label class="form-label">อีเมล</label>
+                <input name="email" class="form-control" type="email" placeholder="name@example.com" required>
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label">บทบาท</label>
+                <select name="role" class="form-select">
+                    <option value="staff">Staff</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-4 d-grid">
+                <button class="btn btn-primary" id="btnCreate"><i class="bi bi-plus-circle me-1"></i> สร้าง</button>
+            </div>
+        </form>
+        <div class="text-muted mt-3 small">
+            <i class="bi bi-info-circle me-1"></i> ระบบนี้เข้าสู่ระบบ Staff/Admin ได้ด้วยอีเมลตามสิทธิ์ที่กำหนด (ไม่ใช้รหัสผ่าน)
+        </div>
+    </div>
+
+    <div class="card">
+        <h5 class="mb-3"><i class="bi bi-list-task me-1"></i> รายชื่อผู้ใช้ในระบบ</h5>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th style="width:180px">สร้างเมื่อ</th>
+                        <th>ชื่อ</th>
+                        <th>อีเมล</th>
+                        <th style="width:120px">ประเภทสมาชิก</th>
+                        <th style="width:80px">บทบาท</th>
+                        <th class="text-end action-col">จัดการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <% if (!users || !users.length) { %>
+                    <tr><td colspan="6" class="text-center text-muted p-4"><i class="bi bi-info-circle me-1"></i> — ไม่มีข้อมูลผู้ใช้ในระบบ —</td></tr>
+                <% } else { %>
+                    <% users.forEach(u => { 
+                        const currentRole = (u.role || u.member_type);
+                        let roleChipClass = 'chip-default';
+                        if (u.role === 'staff') roleChipClass = 'chip-role-staff';
+                        if (u.role === 'admin') roleChipClass = 'chip-role-admin';
+                    %>
+                        <tr>
+                            <td class="text-muted-datetime"><%= new Date(u.created_at).toLocaleString('th-TH', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %></td>
+                            <td><b class="text-dark"><%= u.full_name %></b></td>
+                            <td class="mono"><%= u.email %></td>
+                            <td><span class="chip chip-member"><%= u.member_type || 'N/A' %></span></td>
+                            <td>
+                                <span class="chip <%= roleChipClass %>"><%= u.role || 'N/A' %></span>
+                            </td>
+                            <td class="text-end">
+                                <form class="d-inline-flex gap-2 align-items-center formRole me-2" method="post" action="/admin/users/<%= u.id %>/role">
+                                    <select name="role" class="form-select form-select-sm" style="width:160px">
+                                        <% roles.forEach(r => { %>
+                                            <option value="<%= r.name %>" <%= (r.name===currentRole ? 'selected' : '') %>><%= r.name %></option>
+                                        <% }) %>
+                                    </select>
+                                    <button class="btn btn-sm btn-outline-primary btnRole" type="submit">เปลี่ยนสิทธิ์</button>
+                                </form>
+                                <form class="d-inline" method="post" action="/admin/users/<%= u.id %>/delete" onsubmit="return confirm('คุณต้องการลบผู้ใช้: <%= u.full_name %> (ID: <%= u.id %>) หรือไม่? การดำเนินการนี้ไม่สามารถยกเลิกได้')">
+                                    <button class="btn btn-sm btn-outline-danger" type="submit"><i class="bi bi-trash-fill"></i> ลบ</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <% }) %>
+                <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ป้องกันการกดซ้ำ และโชว์สถานะขณะส่งฟอร์ม (ปรับปรุงให้ใช้ Bootstrap spinner)
+    function disableButton(btn, text) {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> ${text}`;
+    }
+
+    document.querySelectorAll('.formRole').forEach(f => {
+        f.addEventListener('submit', (e) => {
+            const btn = f.querySelector('.btnRole');
+            disableButton(btn, 'กำลังอัปเดต...');
+        });
+    });
+
+    const formCreate = document.getElementById('formCreate');
+    if (formCreate) {
+        formCreate.addEventListener('submit', () => {
+            const btn = document.getElementById('btnCreate');
+            if (btn){ disableButton(btn, 'กำลังสร้าง...'); }
+        });
+    }
+</script>
+
+<%- include('../partials/footer') %>
+</body>
+</html>

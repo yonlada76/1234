@@ -1,0 +1,71 @@
+<!--หน้าเลือกประเภทการสมัคร-->
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <title>เลือกประเภทสมาชิก</title>
+   <%- include('partials/head') %>
+  <style>
+    body {
+      font-family: 'Prompt', sans-serif;
+      background: #f8f9fa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .card-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+      justify-content: center;
+    }
+    .member-card {
+      width: 220px;
+      text-align: center;
+      padding: 25px 20px;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      text-decoration: none;
+      color: #333;
+      transition: 0.3s;
+    }
+    .member-card img {
+      width: 90px;
+      margin-bottom: 15px;
+    }
+    .member-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+    }
+    .member-card p {
+      margin: 0;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card-container">
+    <!-- สมัครนักศึกษา -->
+    <a href="/register/student" class="member-card">
+      <img src="/1.png"  alt="student"  width="96" height="96" loading="lazy">
+      <p>นักศึกษา</p>
+    </a>
+
+    <!-- สมัครบุคคลภายนอก -->
+    <a href="/register/external" class="member-card">
+      <img src="/2.png"  alt="external" width="96" height="96" loading="lazy">
+      <p>บุคคลภายนอก</p>
+    </a>
+
+    <!-- เข้าสู่ระบบ -->
+    <a href="/login" class="member-card">
+      <img src="/login.jpg" alt="login"  width="96" height="96" loading="lazy">
+      <p>เข้าสู่ระบบ</p>
+    </a>
+  </div>
+<script>if('serviceWorker'in navigator)navigator.serviceWorker.register('/public/service-worker.js');</script>
+ <%- include('partials/footer') %>
+</body>
+</html>

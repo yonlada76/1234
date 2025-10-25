@@ -1,0 +1,224 @@
+<style>
+    /* =========================== STYLES: TABLE & STATUS ======================= */
+    :root {
+        --brand: #1f8a4c;
+        --line: #e4e7eb;
+    }
+    .table {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,.05);
+        border: 1px solid #d1d5db;
+        font-size: 0.95rem;
+    }
+    .table thead th {
+        background: #f1f5f9; /* Soft header */
+        color: #475569;
+        font-weight: 600;
+        border-color: #d1d5db;
+        padding: 12px 10px;
+    }
+    .table tbody tr:hover { background-color: #f7f9fc; }
+    .table td { border-color: #f8fafc; }
+
+    /* Member Info Styling */
+    .member-info {
+        font-size: 0.9rem;
+    }
+    .member-info .font-monospace {
+        font-size: 0.85rem;
+        color: #6b7280;
+    }
+
+    /* Badge & Status Styles */
+    .badge { font-weight: 700 !important; }
+
+    .text-success-emphasis { color: var(--brand) !important; }
+    .bg-success-subtle { background-color: #eaf8ee !important; }
+
+    .text-danger-emphasis { color: #dc2626 !important; }
+    .bg-danger-subtle { background-color: #fee2e2 !important; }
+    
+    .text-bg-warning { background-color: #f59e0b !important; color: white !important; }
+    .text-bg-danger { background-color: #dc2626 !important; }
+    .text-bg-info { background-color: #38bdf8 !important; color: white !important; }
+
+    /* Action Buttons within Status Column */
+    .btn-sm {
+        padding: 4px 8px;
+        font-size: 0.8rem;
+        border-radius: 6px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .btn-outline-primary {
+        color: var(--brand);
+        border-color: var(--brand);
+    }
+    .btn-outline-primary:hover {
+        background-color: var(--brand);
+        color: white;
+    }
+</style>
+
+<table class="table table-hover table-bordered align-middle">
+    <thead>
+        <tr>
+            <% if (showMemberCols) { %>
+                <th style="min-width:180px">สมาชิก</th>
+                <th style="min-width:100px">ประเภท</th>
+                <th style="min-width:120px">รหัส</th>
+            <% } %>
+            <th style="min-width:180px">อุปกรณ์</th>
+            <th class="text-end" style="min-width:70px">จำนวน</th>
+            <th style="min-width:110px">ยืมเมื่อ</th>
+            <th style="min-width:110px">คืนเมื่อ</th>
+            <th style="min-width:280px">สถานะ / ดำเนินการ</th>
+        </tr>
+    </thead>
+    <tbody>
+        <% if (!rows || !rows.length) { %>
+            <tr>
+                <td colspan="<%= showMemberCols ? 8 : 5 %>" class="text-center text-muted p-4">
+                    <i class="bi bi-info-circle me-1"></i> ไม่มีข้อมูลรายการยืม-คืน
+                </td>
+            </tr>
+        <% } else { %>
+            <% rows.forEach(r => { %>
+                <% 
+                    // ===== คำนวณค่าที่ใช้แสดงต่อแถว =====
+                    const bd = r.borrow_date ? new Date(r.borrow_date) : null;
+                    const diffDaysCalc = bd ? Math.floor((Date.now() - bd.getTime()) / 86400000) : 0;
+                    const d = Number.isFinite(Number(r.days_overdue)) ? Number(r.days_overdue) : diffDaysCalc;
+                    const returned = !!r.return_date;
+
+                    const rowKey = `row-${r.id}`;
+
+                    const promisedDate = r.promised_return_date ? new Date(r.promised_return_date) : null;
+                    const promisedStr  = promisedDate ? promisedDate.toLocaleDateString('th-TH') : null;
+
+                    const remainingQty = Number(r.remaining_qty ?? Math.max((r.qty||0)-(r.returned_qty||0),0));
+                %>
+                <tr>
+                    <% if (showMemberCols) { %>
+                        <td class="fw-semibold member-info"><i class="bi bi-person me-1"></i> <%= r.full_name || '-' %></td>
+                        <td>
+                            <% if (r.member_type === 'student') { %>
+                                <span class="badge rounded-pill bg-success-subtle text-success-emphasis border border-success-subtle px-2 py-1">นักศึกษา</span>
+                            <% } else { %>
+                                <span class="badge rounded-pill bg-danger-subtle text-danger-emphasis border border-danger-subtle px-2 py-1">ภายนอก</span>
+                            <% } %>
+                        </td>
+                        <td class="font-monospace text-muted">
+                            <%= r.member_type === 'student' ? (r.student_id || '-') : (r.citizen_id || '-') %>
+                        </td>
+                    <% } %>
+
+                    <td><i class="bi bi-clipboard-check me-1 text-secondary"></i><b><%= r.item_name %></b></td>
+                    <td class="text-end fw-bold"><%= r.qty %></td>
+                    <td class="text-muted"><%= r.borrow_date ? new Date(r.borrow_date).toLocaleDateString('th-TH') : '-' %></td>
+
+                    <td>
+                        <% if (returned) { %>
+                            <b class="text-success-emphasis"><%= new Date(r.return_date).toLocaleDateString('th-TH') %></b>
+                        <% } else { %>
+                            <span class="text-muted">–</span>
+                        <% } %>
+                    </td>
+
+                    <td>
+                        <div id="<%= rowKey %>" class="d-flex flex-column gap-1">
+                            <% if (returned) { %>
+                                <span class="text-success fw-bold">
+                                    <i class="bi bi-check2-circle me-1"></i> คืนสมบูรณ์
+                                </span>
+
+                            <% } else if (r.escalated_at) { %>
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <span class="badge text-bg-dark">ส่งถึงคณะแล้ว</span>
+                                    <small class="text-muted">บันทึกเมื่อ <%= new Date(r.escalated_at).toLocaleDateString('th-TH') %></small>
+                                </div>
+                                <div class="small text-muted">คงค้าง <%= remainingQty %> ชิ้น</div>
+
+                            <% } else if (promisedDate) { %>
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <span class="badge text-bg-info">นัดคืน <%= promisedStr %></span>
+                                    <% if (user && (user.role === 'staff' || user.role === 'admin')) { %>
+                                        <a class="btn btn-sm btn-outline-primary"
+                                        href="/return?member=<%= encodeURIComponent(r.user_id) %>">รับคืน</a>
+                                    <% } %>
+                                </div>
+                                <div class="small text-muted"> คงค้าง <%= remainingQty %> ชิ้น</div>
+                                <% if (promisedDate < Date.now()) { %>
+                                    <span class="badge text-bg-danger mt-1">เกินกำหนดนัดแล้ว!</span>
+                                <% } %>
+
+                            <% } else if (d >= 7) { %>
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <span class="badge text-bg-danger fs-6">เกินกำหนด <%= d %> วัน</span>
+                                    <% if (user && (user.role === 'staff' || user.role === 'admin')) { %>
+                                        <a class="btn btn-sm btn-outline-danger"
+                                            href="/reports/overdue/print?tx=<%= r.id %>" target="_blank" rel="noopener">
+                                            <i class="bi bi-printer"></i> พิมพ์เอกสาร
+                                        </a>
+                                    <% } %>
+                                </div>
+                                <div class="small text-muted">คงค้าง <%= remainingQty %> ชิ้น</div>
+
+                            <% } else if (d >= 2) { %>
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <span class="badge text-bg-warning text-dark">ล่าช้า <%= d %> วัน</span>
+                                    <% if (user && (user.role === 'staff' || user.role === 'admin')) { %>
+                                        <button class="btn btn-sm btn-outline-danger"
+                                            onclick="sendOverdueStudent('<%= r.id %>','<%= rowKey %>', this)">
+                                            <i class="bi bi-bell"></i> แจ้งนักศึกษา
+                                        </button>
+                                    <% } %>
+                                </div>
+                                <div class="small text-muted">คงค้าง <%= remainingQty %> ชิ้น</div>
+
+                            <% } else { %>
+                                <span class="badge text-bg-secondary">ยังไม่คืน (ผ่านมา <%= d %> วัน)</span>
+                                <div class="small text-muted">คงค้าง <%= remainingQty %> ชิ้น</div>
+                            <% } %>
+                        </div>
+                    </td>
+                </tr>
+            <% }) %>
+        <% } %>
+    </tbody>
+</table>
+
+<script>
+    // แจ้งนักศึกษา → หลังสำเร็จแทนด้วย badge "แจ้งแล้ว"
+    async function sendOverdueStudent(txId, rowElId, btn){
+        const host = document.getElementById(rowElId);
+        const old  = btn ? btn.innerHTML : '';
+        if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> ส่ง...'; }
+        try{
+            const res  = await fetch('/api/notifications/overdue/student', {
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ tx_id: txId })
+            });
+            const data = await res.json().catch(()=>({}));
+            
+            // 409 Conflict: เคยแจ้งแล้ว
+            if (res.status === 409 || res.ok) {
+                if (host){
+                    host.innerHTML =
+                        '<span class="badge text-bg-success"><i class="bi bi-check2 me-1"></i> แจ้งแล้ว</span>' +
+                        '<div class="small text-muted"> (กรุณารีเฟรชเพื่อดูสถานะล่าสุด) </div>';
+                }
+                return;
+            }
+            
+            if(!res.ok) throw new Error(data?.error || ('HTTP '+res.status));
+            
+        }catch(e){
+            alert('ส่งไม่สำเร็จ: '+(e.message||e));
+            if (btn){ btn.disabled=false; btn.innerHTML = old; }
+        }
+    }
+</script>

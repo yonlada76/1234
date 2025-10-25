@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: sports-center
+    env: node
+    plan: free
+    region: singapore
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: projectdb-db         # 👈 ให้ตรงกับ databases ด้านล่าง
+          property: connectionString
+      - key: PGSSL
+        value: "true"
+      - key: SESS_SECRET
+        generateValue: true
+      - key: MAIL_FROM
+        value: "noreply@example.com"
+      - key: SMTP_HOST
+        value: "smtp.gmail.com"
+      - key: SMTP_PORT
+        value: "465"
+      - key: SMTP_USER
+        value: ""
+      - key: SMTP_PASS
+        value: ""
+      - key: STAFF_ALLOWED_TYPES
+        value: "overdue_staff,overdue_staff_2_6"
+
+databases:
+  - name: projectdb-db              # 👈 ชื่อเดียวกับด้านบน
+    plan: free
+    region: singapore

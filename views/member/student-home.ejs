@@ -1,0 +1,337 @@
+<!--หน้านักศึกษาหลังสมัครเป็นสมาชิก-->
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <title>หน้าของฉัน (นักศึกษา)</title>
+  <%- include('partials/head') %>
+  <style>
+    .section-title{font-weight:700}
+    .info-label{color:#6c757d;font-size:.92rem}
+    .qr-box{border:1px dashed #cfe6d7;border-radius:14px;padding:18px;background:#f7fbf9}
+    .card-action{border:0;border-radius:16px;box-shadow:0 6px 20px rgba(0,0,0,.06)}
+    .card-action .icon{font-size:28px}
+    .badge-type{background:#eaf8f0;color:#198754;border-radius:999px;font-weight:600}
+    /* [ADD] Notification styles */
+    .notif-unread{border-left:4px solid #0d6efd;background:#f6f9ff}
+    .notif-time{font-size:.85rem;color:#6c757d}
+    .bell-btn{position:relative}
+    .bell-badge{
+      position:absolute;top:-4px;right:-4px;
+      background:#dc3545;color:#fff;border-radius:999px;
+      font-size:.7rem;line-height:1;padding:2px 6px;min-width:18px;text-align:center
+    }
+  </style>
+</head>
+<body class="bg-light">
+
+  <!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-success shadow-sm">
+  <div class="container">
+    <a class="navbar-brand fw-semibold" href="/">🏋️ ระบบยืม-คืน & ฟิตเนส</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div id="nav" class="collapse navbar-collapse">
+      <ul class="navbar-nav ms-auto align-items-center gap-2">
+        <li class="nav-item">
+          <a class="nav-link active" href="/student-home">หน้าแรก</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active" href="/equipment">อุปกรณ์กีฬา</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active" href="/history">ประวัติของฉัน</a>
+        </li>
+        <li class="nav-item">
+          <form action="/login" method="post" class="d-inline">
+            <button 
+              type="submit" 
+              class="nav-link btn btn-link text-light px-2 py-2" 
+              style="text-decoration: none;">
+              ออกจากระบบ
+            </button>
+          </form>
+        </li>
+        <!-- [ADD] ปุ่มกระดิ่งแจ้งเตือน -->
+        <li class="nav-item">
+          <button id="btnBell" class="btn btn-link text-light position-relative bell-btn" type="button"
+                  data-bs-toggle="offcanvas" data-bs-target="#offcanvasNotif" aria-controls="offcanvasNotif">
+            <i class="bi bi-bell fs-5"></i>
+            <span id="bellCount" class="bell-badge d-none">0</span>
+          </button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  <!-- Content -->
+  <main class="container my-4 my-md-5">
+    <!-- Greeting -->
+    <div class="row g-4 align-items-stretch">
+      <div class="col-12 col-lg-8">
+        <div class="card border-0 shadow p-4 p-md-5">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div>
+              <span class="badge badge-type px-3 py-2">👩‍🎓 นักศึกษา</span>
+              <h2 class="section-title mt-3 mb-1">สวัสดี <%= user?.full_name || 'นักศึกษา' %></h2>
+              <p class="text-muted mb-0">นี่คือหน้าของคุณ — นักศึกษาสามารถดูรายการอุปกรณ์และประวัติได้เท่านั้น การยืม/คืนทำโดยเจ้าหน้าที่</p>
+            </div>
+          </div>
+
+          <!-- Info blocks -->
+          <div class="row g-3 mt-4">
+            <div class="col-12 col-md-6">
+              <div class="p-3 border rounded-3 bg-white h-100">
+                <div class="info-label mb-1">อีเมล</div>
+                <div class="fw-semibold"><%= user?.email || '-' %></div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="p-3 border rounded-3 bg-white h-100">
+                <div class="info-label mb-1">รหัสนักศึกษา</div>
+                <div class="fw-semibold"><%= user?.student_id || '-' %></div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="p-3 border rounded-3 bg-white h-100">
+                <div class="info-label mb-1">คณะ</div>
+                <div class="fw-semibold"><%= user?.faculty || '-' %></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="row g-3 mt-4">
+            <div class="col-12 col-md-4">
+              <a class="card card-action h-100 p-3 text-decoration-none" href="/equipment">
+                <div class="icon">🏀</div>
+                <div class="fw-bold mt-2">ดูรายการอุปกรณ์</div>
+                <div class="text-muted small">ดูว่ามีอะไรพร้อมให้ยืม (เจ้าหน้าที่เป็นผู้ทำรายการ)</div>
+              </a>
+            </div>
+            <div class="col-12 col-md-4">
+              <a class="card card-action h-100 p-3 text-decoration-none" href="/history">
+                <div class="icon">🗂️</div>
+                <div class="fw-bold mt-2">ประวัติของฉัน</div>
+                <div class="text-muted small">ประวัติการยืม-คืนและเข้าใช้ฟิตเนส</div>
+              </a>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- QR -->
+      <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow p-4 h-100 d-flex">
+          <h5 class="fw-bold mb-3">QR Code ของฉัน</h5>
+          <div class="qr-box text-center flex-grow-1 d-flex align-items-center justify-content-center">
+            <% if (user?.qr_code_value) { %>
+              <img class="img-fluid" style="max-width:220px"
+                   src="/qrcode/<%= encodeURIComponent(user.qr_code_value) %>"  
+                   alt="QR Code">
+                <div class="fw-semibold mt-1"><%= user?.student_id %></div>
+            <% } else { %>
+              <div class="text-muted">ยังไม่มี QR Code</div>
+            <% } %>
+          </div>
+          <div class="text-muted small mt-2">แสดง QR นี้ให้เจ้าหน้าที่สแกนเพื่อยืม/คืนอุปกรณ์ หรือเข้าใช้ฟิตเนส (นักศึกษา 5 บาท)</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-4 text-center text-muted small">
+    © <script>document.write(new Date().getFullYear())</script> Sports & Fitness Center
+  </footer>
+
+  <!-- [ADD] Offcanvas รายการแจ้งเตือน -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNotif" aria-labelledby="offcanvasNotifLabel">
+    <div class="offcanvas-header">
+      <h5 id="offcanvasNotifLabel" class="mb-0">การแจ้งเตือน</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="ปิด"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+      <div id="notifList" class="list-group list-group-flush">
+        <!-- เติมรายการด้วย JS -->
+      </div>
+    </div>
+    <div class="border-top p-2 d-flex gap-2 justify-content-end">
+      <button id="btnMarkAll" class="btn btn-outline-secondary btn-sm">ทำเครื่องหมายว่าอ่านแล้วทั้งหมด</button>
+    </div>
+  </div>
+
+  <!-- [ADD] Toast container สำหรับแจ้งเตือนใหม่ -->
+  <div class="position-fixed bottom-0 end-0 p-3" style="z-index:1080">
+    <div id="toastZone"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- [ADD] สคริปต์แจ้งเตือน -->
+  <script>
+    // ปรับให้ตรงกับ session ระบบของคุณ
+    const CURRENT_USER_ID = "<%= user?.id || '' %>";
+
+    const notifListEl = document.getElementById('notifList');
+    const bellCountEl = document.getElementById('bellCount');
+    const toastZone   = document.getElementById('toastZone');
+    const offcanvasEl = document.getElementById('offcanvasNotif');
+
+    let lastFetchedAt = null; // ISO string เวลา fetch ล่าสุด (กันดึงซ้ำ)
+    let unseenIds = new Set(); // เอาไว้กันซ้ำ toast
+
+    // แปลงเวลาให้อ่านง่าย
+    function fmtTime(iso){
+      try {
+        const d = new Date(iso);
+        return d.toLocaleString('th-TH', { hour12:false });
+      } catch { return iso || ''; }
+    }
+
+    // เรนเดอร์ 1 รายการ
+    function renderItem(n){
+      const a = document.createElement('a');
+      a.href = "#";
+      a.className = "list-group-item list-group-item-action notif-item " + (n.read_at ? "" : "notif-unread");
+      a.dataset.id = n.id;
+
+      a.innerHTML = `
+        <div class="d-flex w-100 justify-content-between">
+          <h6 class="mb-1">${n.title || 'แจ้งเตือน'}</h6>
+          <small class="notif-time">${fmtTime(n.created_at)}</small>
+        </div>
+        <p class="mb-1">${n.message || ''}</p>
+        ${n.meta?.ref ? `<small class="text-primary">ดูรายละเอียด: ${n.meta.ref}</small>` : ''}
+      `;
+
+      a.addEventListener('click', async (e) => {
+        e.preventDefault();
+        if (!n.read_at) {
+          await markRead([n.id]);
+          a.classList.remove('notif-unread');
+          n.read_at = new Date().toISOString();
+          updateBadge();
+        }
+        // ถ้ามีลิงก์ไปหน้า detail เช่น /history ก็ไปได้เลย
+        if (n.meta?.goto) window.location.href = n.meta.goto;
+      });
+
+      return a;
+    }
+
+    // อัปเดต badge จำนวนที่ยังไม่อ่าน
+    function updateBadge(){
+      const unread = notifListEl.querySelectorAll('.notif-unread').length;
+      if (unread > 0) {
+        bellCountEl.textContent = unread > 99 ? '99+' : unread;
+        bellCountEl.classList.remove('d-none');
+      } else {
+        bellCountEl.classList.add('d-none');
+      }
+    }
+
+    // แสดง toast เมื่อมีแจ้งเตือนใหม่
+    function pushToast(n){
+      if (unseenIds.has(n.id)) return;
+      unseenIds.add(n.id);
+
+      const wrap = document.createElement('div');
+      wrap.className = 'toast align-items-center';
+      wrap.role = 'alert';
+      wrap.ariaLive = 'assertive';
+      wrap.ariaAtomic = 'true';
+      wrap.dataset.bsAutohide = "true";
+      wrap.dataset.bsDelay = "6000";
+
+      wrap.innerHTML = `
+        <div class="toast-header">
+          <i class="bi bi-bell me-2"></i>
+          <strong class="me-auto">${n.title || 'แจ้งเตือน'}</strong>
+          <small>${fmtTime(n.created_at)}</small>
+          <button type="button" class="btn-close ms-2 mb-1" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body">
+          ${n.message || ''}
+          ${n.meta?.goto ? `<div class="mt-2"><a class="btn btn-sm btn-primary" href="${n.meta.goto}">เปิดดู</a></div>` : ''}
+        </div>
+      `;
+      toastZone.appendChild(wrap);
+      const t = new bootstrap.Toast(wrap);
+      t.show();
+    }
+
+    // ดึงรายการแจ้งเตือน
+    async function fetchNotifs({showToast=true} = {}){
+      try {
+        const url = new URL('/api/notifications', window.location.origin);
+        if (lastFetchedAt) url.searchParams.set('since', lastFetchedAt);
+        const res = await fetch(url, { credentials:'same-origin' });
+        if (!res.ok) return;
+        const data = await res.json(); // { items: [...], now: iso }
+        lastFetchedAt = data.now || new Date().toISOString();
+
+        // เติมรายการใหม่ (prepend)
+        (data.items || []).forEach(n => {
+          // ถ้ายังไม่มีอยู่ใน list ค่อยใส่
+          if (!notifListEl.querySelector(`[data-id="${n.id}"]`)) {
+            const el = renderItem(n);
+            notifListEl.prepend(el);
+            if (!n.read_at && showToast && document.visibilityState === 'visible') {
+              pushToast(n);
+            }
+          }
+        });
+
+        updateBadge();
+      } catch (e) { console.error('fetchNotifs error', e); }
+    }
+
+    // ทำเครื่องหมายว่าอ่านแล้ว
+    async function markRead(ids){
+      try{
+        await fetch('/api/notifications/mark-read', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          credentials:'same-origin',
+          body: JSON.stringify({ ids })
+        });
+      }catch(e){ console.error('markRead error', e); }
+    }
+
+    // ปุ่ม "อ่านแล้วทั้งหมด"
+    document.getElementById('btnMarkAll').addEventListener('click', async () => {
+      const unreadEls = notifListEl.querySelectorAll('.notif-unread');
+      const ids = [...unreadEls].map(el => el.dataset.id);
+      if (ids.length === 0) return;
+      await markRead(ids);
+      unreadEls.forEach(el => el.classList.remove('notif-unread'));
+      updateBadge();
+    });
+
+    // โหลดครั้งแรก (เต็มรายการล่าสุด 20 รายการ)
+    (async function init(){
+      // ดึงล็อตแรกแบบไม่ใช้ since เพื่อ initial list
+      try {
+        const res = await fetch('/api/notifications?limit=20', { credentials:'same-origin' });
+        if (res.ok){
+          const data = await res.json();
+          notifListEl.innerHTML = '';
+          (data.items || []).forEach(n => notifListEl.appendChild(renderItem(n)));
+          lastFetchedAt = data.now || new Date().toISOString();
+          updateBadge();
+        }
+      } catch(e){ console.error(e); }
+
+      // Poll ทุก 20 วินาที (เบาๆ) และหยุด toast เมื่อหน้าไม่โฟกัส
+      setInterval(() => fetchNotifs({showToast:true}), 5000);
+
+      // เมื่อเปิด offcanvas ให้รีเฟรชเพื่อความชัวร์
+      offcanvasEl.addEventListener('show.bs.offcanvas', () => fetchNotifs({showToast:false}));
+    })();
+  </script>
+    <%- include('partials/footer') %>
+</body>
+</html>

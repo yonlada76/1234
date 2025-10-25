@@ -1,0 +1,28 @@
+ <%- include('../partials/head') %>
+<script>
+async function sendOverdueStudent(txId){
+  const btn = event.currentTarget;
+  const old = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> กำลังส่ง...';
+  try{
+    const resp = await fetch('/notifications/overdue/student', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      credentials: 'same-origin',
+      body: JSON.stringify({ tx_id: txId })
+    });
+    let data = {};
+    try { data = await resp.json(); } catch {}
+    if (!resp.ok) throw new Error(data?.error || `HTTP ${resp.status}`);
+
+    btn.classList.remove('btn-outline-danger');
+    btn.classList.add('btn-success');
+    btn.innerHTML = '<i class="bi bi-check2-circle"></i> ส่งแล้ว';
+  }catch(e){
+    alert('ส่งแจ้งเตือนไม่สำเร็จ: ' + (e.message || e));
+    btn.disabled = false; btn.innerHTML = old;
+  }
+}
+</script>
+  <%- include('../partials/footer') %>

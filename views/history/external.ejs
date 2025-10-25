@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="th">
+<head>
+    <title>ประวัติของฉัน</title>
+    <%- include('../partials/head') %>
+    <style>
+        /* =========================== STYLES: GLOBAL/VARS ========================= */
+        :root {
+            --brand: #1f8a4c;
+            --brand-dark: #166a39;
+            --bg: #f5f7fa;
+            --ink: #1e293b;
+            --line: #e4e7eb;
+            --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.08);
+            --card-bg: #ffffff;
+        }
+        body { font-family: 'Prompt', sans-serif; background: var(--bg); color: var(--ink); }
+        .container { max-width: 1000px; } /* จำกัดความกว้างให้ดูดี */
+        
+        /* Header */
+        h3 { 
+            font-weight: 700; 
+            color: var(--brand-dark); 
+            font-size: 1.7rem; 
+        }
+        h5 { 
+            font-weight: 700; 
+            color: #475569; 
+            border-bottom: 1px solid var(--line);
+            padding-bottom: 8px;
+        }
+
+        /* Card Style */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid #d1d5db;
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            padding: 25px; /* เพิ่ม padding */
+        }
+        
+        /* Buttons */
+        .btn-outline-secondary {
+            border-color: #d1d5db;
+            color: #4b5563;
+            font-weight: 500;
+        }
+        .btn-outline-secondary:hover {
+            background-color: #f3f4f6;
+            color: #1e293b;
+        }
+    </style>
+</head>
+<body>
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0"><i class="bi bi-person-bounding-box me-2"></i>ประวัติของฉัน</h3>
+        <a href="/external-home" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> กลับหน้าหลัก
+        </a>
+    </div>
+    
+    <!-- FITNESS HISTORY CARD -->
+    <div class="card p-4 mb-4">
+        <h5 class="mb-3"><i class="bi bi-bicycle me-1 text-success"></i> ประวัติการเข้าใช้ฟิตเนส</h5>
+        <% 
+            // ตรวจสอบว่า fitnessRows มีข้อมูลหรือไม่
+            const hasFitnessRows = Array.isArray(fitnessRows) && fitnessRows.length > 0;
+        %>
+
+        <% if (hasFitnessRows) { %>
+            <!-- ใช้ partial ที่ตกแต่งแล้ว (_table_fitness) -->
+            <%- include('_table_fitness', { rows: fitnessRows, showMemberCols: false }) %>
+        <% } else { %>
+            <div class="text-center text-muted p-4">
+                <i class="bi bi-info-circle me-1"></i> ไม่มีประวัติการเข้าใช้ฟิตเนส
+            </div>
+        <% } %>
+    </div>
+
+    <!-- BORROW HISTORY CARD (Placeholder - หากมีข้อมูลยืมคืนจะแสดงที่นี่) -->
+    <div class="card p-4">
+        <h5 class="mb-3"><i class="bi bi-basket2-fill me-1 text-primary"></i> ประวัติการยืมอุปกรณ์</h5>
+        
+        <div class="text-center text-muted p-4">
+            <i class="bi bi-tools me-1"></i> ส่วนนี้จะแสดงประวัติการยืม-คืนอุปกรณ์ของคุณ
+        </div>
+        
+    </div>
+
+</div>
+<%- include('../partials/footer') %>
+</body>
+</html>

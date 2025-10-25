@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="th">
+<head>
+    <title>เข้าสู่ระบบผู้ดูแล</title>
+    <%- include('../partials/head') %>
+    <style>
+        /* ========================================================================= */
+        /* =========================== STYLES: GLOBAL/VARS ========================= */
+        /* ========================================================================= */
+        :root {
+            --brand: #1f8a4c; /* Green Brand Color */
+            --brand-dark: #166a39;
+            --bg: #f5f7fa; /* Light Background */
+            --card: #ffffff;
+            --ink: #1e293b;
+            --line: #e4e7eb;
+            --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.1); /* Deeper shadow for focus */
+            --border-radius: 14px;
+        }
+
+        body {
+            font-family: 'Prompt', sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            min-height: 100vh;
+            display: flex; /* Use flex for centering */
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Container */
+        .wrap {
+            max-width: 440px; /* Slimmer for better focus */
+            width: 90%;
+            margin: auto; /* Center with flex fallback */
+            padding: 20px;
+        }
+
+        /* Card Style */
+        .card {
+            background: var(--card);
+            border: 1px solid #d1d5db;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            padding: 30px 35px; /* Increased padding */
+        }
+
+        /* Header */
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--brand); /* Brand color highlight */
+            text-align: center;
+        }
+
+        /* Form Elements */
+        label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 6px;
+            color: #374151;
+            font-size: 0.95rem;
+        }
+
+        .form-control {
+            border-radius: 8px;
+            padding: 10px 15px;
+            border: 1px solid #d1d5db;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+            margin-bottom: 15px;
+        }
+
+        .form-control:focus {
+            border-color: var(--brand);
+            box-shadow: 0 0 0 0.25rem rgba(31, 138, 76, 0.25);
+        }
+
+        /* Button */
+        .btn-primary {
+            background-color: var(--brand);
+            border-color: var(--brand);
+            font-weight: 600;
+            padding: 10px 20px;
+            width: 100%;
+            border-radius: 8px;
+            margin-top: 5px;
+            transition: background-color .2s;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--brand-dark);
+            border-color: var(--brand-dark);
+        }
+
+        /* Alert */
+        .alert-danger {
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            border: 1px solid #fca5a5;
+            background-color: #fef2f2;
+            color: #b91c1c;
+        }
+
+        /* Footer Link */
+        .other-login-link {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #f3f4f6;
+        }
+        .other-login-link a {
+            color: #4b5563;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: color .2s;
+        }
+        .other-login-link a:hover {
+            color: var(--brand);
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="card">
+            <h2><i class="bi bi-shield-lock-fill me-2"></i>เข้าสู่ระบบผู้ดูแล (Admin)</h2>
+
+            <% if (typeof error === 'string' && error) { %>
+                <div class="alert alert-danger"><%= error %></div>
+            <% } %>
+
+            <form method="post" action="/admin-login">
+                <div class="mb-3">
+                    <label for="email">อีเมลแอดมิน</label>
+                    <input id="email" class="form-control" name="email" type="email" placeholder="admin@example.com" required>
+                </div>
+                <button class="btn btn-primary" type="submit">
+                    <i class="bi bi-box-arrow-in-right me-2"></i> เข้าสู่ระบบ
+                </button>
+            </form>
+
+            <p class="other-login-link">
+                <a href="/staff-login">
+                    <i class="bi bi-person-badge me-1"></i> เข้าสู่ระบบเจ้าหน้าที่ (Staff)
+                </a>
+            </p>
+        </div>
+    </div>
+
+    <%- include('../partials/footer') %>
+</body>
+</html>

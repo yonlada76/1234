@@ -1,0 +1,264 @@
+<%
+const _member = member || null;
+const _inv    = Array.isArray(inventory) ? inventory : [];
+const _loans  = Array.isArray(loans) ? loans : [];
+const today   = new Date().toISOString().slice(0,10);
+const hasInventory = _inv.length > 0;
+const isMemberValid = !!_member;
+%>
+<!doctype html>
+<html lang="th">
+<head>
+    <title>การยืมอุปกรณ์</title>
+    <%- include('partials/head') %>
+    <style>
+        /* ========================================================================= */
+        /* =========================== STYLES: GLOBAL/VARS ========================= */
+        /* ========================================================================= */
+        :root {
+            --brand-green: #1f8a4c;
+            --brand-yellow: #fbbf24;
+            --brand-yellow-dark: #f59e0b;
+            --bg: #f5f7fa;
+            --card-border: #e2e8f0;
+            --ink: #1e293b;
+            --muted: #64748b;
+            --shadow-md: 0 10px 25px rgba(0, 0, 0, 0.08);
+            --border-radius: 16px;
+        }
+
+        body{font-family:'Prompt',sans-serif;background:var(--bg);color:var(--ink)}
+        .wrap{
+            max-width:500px; /* ขยายความกว้างขึ้นเล็กน้อย */
+            margin:40px auto;
+            background:var(--card);
+            border-radius:20px;
+            box-shadow:var(--shadow-md);
+            padding:30px;
+        }
+        h1{
+            text-align:center;
+            font-weight:700;
+            margin:0 0 20px;
+            color:var(--ink);
+            font-size: 1.8rem;
+        }
+
+        /* Member Card / Avatar */
+        .card-inner{
+            border:1px solid var(--card-border);
+            border-radius:18px;
+            padding:25px;
+            background:#fff;
+            margin-bottom:25px;
+        }
+        .avatar{
+            width:100px; height:100px;
+            border-radius:50%; /* เปลี่ยนเป็นวงกลม */
+            margin:0 auto 18px;
+            background:#f0fdf4; /* พื้นหลังสีอ่อน */
+            display:flex;align-items:center;justify-content:center;
+            box-shadow:0 6px 15px rgba(31,138,76,.15); /* เงาสีเขียวอ่อน */
+        }
+        .avatar svg{width:50px;height:50px;color:var(--brand-green)}
+        
+        /* Form Elements */
+        .label{font-size:.9rem;color:#6b7280;margin-bottom:6px;font-weight:600}
+        .form-control,.form-select{
+            border-radius:10px;
+            border:1px solid #d1d5db;
+            padding:.7rem .9rem;
+            font-size: 0.95rem;
+        }
+
+        /* Accent Button (บันทึกการยืม) */
+        .btn-accent{
+            background:var(--brand-yellow);
+            border:none;
+            color:var(--ink);
+            border-radius:10px; /* เปลี่ยนเป็นสี่เหลี่ยมขอบมน */
+            padding:.7rem 1rem;
+            font-weight:700;
+            box-shadow:0 6px 15px rgba(251,191,36,.35);
+            transition: all .2s;
+        }
+        .btn-accent:hover {
+            background: var(--brand-yellow-dark);
+            box-shadow:0 4px 12px rgba(251,191,36,.4);
+            transform: translateY(-1px);
+        }
+
+        /* List Mini (รายการคงค้าง) */
+        .list-mini{
+            border:1px dashed #a7f3d0; /* เส้นประสีเขียวอ่อน */
+            border-radius:12px;
+            padding:15px 20px;
+            background:#f0fdf4; /* พื้นหลังสีเขียวอ่อน */
+        }
+        .list-mini ul{list-style:disc; margin-left: -15px;}
+        .list-mini li{margin-bottom: 5px; font-size: 0.95rem; color: #374151;}
+        .list-mini li .text-muted {font-size: 0.85rem; color: #9ca3af !important;}
+        .list-mini .title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--brand-dark);
+            border-bottom: 1px solid #d1fae5;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+        }
+
+        /* Alert */
+        .alert-warning {
+            border-radius: 10px;
+            border-color: #fcd34d;
+            background-color: #fffbeb;
+            color: #b45309;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="wrap">
+            <h1><i class="bi bi-file-earmark-plus-fill me-2"></i>การยืมอุปกรณ์</h1>
+
+            <div class="card-inner">
+                <% if (!isMemberValid && typeof message === 'string' && message) { %>
+                    <div class="alert alert-warning text-center">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i> ไม่พบข้อมูลสมาชิก
+                        <a href="/staff-home" class="alert-link fw-semibold">กลับไปสแกนใหม่</a>
+                    </div>
+                <% } %>
+
+                <div class="avatar">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.4"
+                            d="M15.75 7.5a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 19.5a7.5 7.5 0 0 1 15 0"/>
+                    </svg>
+                </div>
+                <div class="text-center mb-4">
+                    <div class="text-muted">สมาชิก</div>
+                    <div class="fw-bold fs-5 text-dark"><%= isMemberValid ? _member.full_name : 'ไม่พบสมาชิก' %></div>
+                </div>
+
+                <form method="post" action="/borrow/submit" class="mt-2" id="borrow" onsubmit="return validateBorrow()">
+                    
+                    <div class="mb-3">
+                        <div class="label">วันที่ยืม</div>
+                        <input type="date" name="borrow_date" class="form-control" value="<%= today %>" max="<%= today %>" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label label">อุปกรณ์</label>
+                        <select name="inventory_id" id="inv" class="form-select" required>
+                            <% if (!_inv.length) { %>
+                                <option value="">— ไม่มีอุปกรณ์พร้อมยืม —</option>
+                            <% } else { %>
+                                <% _inv.forEach(i => { %>
+                                <option value="<%= i.id %>" data-stock="<%= i.available_for_new_borrow || i.stock %>" <%= (i.available_for_new_borrow || i.stock) <= 0 ? 'disabled' : '' %>>
+                                    <%= i.name %> (คงเหลือ <%= i.available_for_new_borrow || i.stock %>)
+                                </option>
+                                <% }) %>
+                            <% } %>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="label">จำนวน</div>
+                        <select name="qty" class="form-select" required id="qty"></select>
+                    </div>
+
+                    <input type="hidden" name="member_id" value="<%= _member ? _member.id : '' %>">
+                    <button class="btn btn-accent w-100 mt-3" type="submit" <%= isMemberValid && hasInventory ? '' : 'disabled' %>>
+                        <i class="bi bi-box-arrow-in-up me-2"></i> บันทึกการยืม
+                    </button>
+                    
+                    <% if (!hasInventory) { %>
+                        <div class="text-danger text-center small mt-2 fw-semibold">ไม่มีอุปกรณ์พร้อมยืมในสต็อก</div>
+                    <% } %>
+                    <% if (!isMemberValid) { %>
+                        <div class="text-danger text-center small mt-2 fw-semibold">ไม่สามารถทำรายการได้: ไม่พบข้อมูลสมาชิก</div>
+                    <% } %>
+                </form>
+            </div>
+
+            <% if (_loans.length) { %>
+                <div class="list-mini">
+                    <div class="title"><i class="bi bi-clock-history me-1"></i> รายการที่ยังไม่คืนของสมาชิก</div>
+                    <ul class="mb-0">
+                        <% _loans.forEach(l => { %>
+                            <li>
+                                <strong><%= l.name %></strong> × <%= l.qty %> ชิ้น 
+                                <span class="text-muted">(ยืมเมื่อ <%= new Date(l.borrow_date).toLocaleDateString('th-TH') %>)</span>
+                            </li>
+                        <% }) %>
+                    </ul>
+                </div>
+            <% } %>
+
+            <div class="text-center mt-4">
+                <a class="btn btn-outline-secondary" href="/staff-home">
+                    <i class="bi bi-qr-code-scan me-2"></i> สแกนสมาชิกคนถัดไป
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function(){
+            const selInv = document.getElementById('inv');
+            const selQty = document.getElementById('qty');
+            if (!selInv || !selQty) return;
+            
+            function rebuildQty(){
+                const opt = selInv.options[selInv.selectedIndex];
+                const stock = parseInt(opt?.dataset.stock || '0', 10);
+                
+                // จำนวนสูงสุดที่สามารถยืมได้ คือ สต็อกที่มี หรือสูงสุด 10 ชิ้น
+                const max = Math.max(0, Math.min(stock, 10)); 
+                
+                selQty.innerHTML = '';
+                if (max === 0) {
+                    const o = document.createElement('option');
+                    o.value = ''; o.textContent = '— สต็อกหมด —';
+                    selQty.appendChild(o);
+                } else {
+                    for (let n=1; n<=max; n++){
+                        const o = document.createElement('option');
+                        o.value = n; o.textContent = `${n} ชิ้น`;
+                        selQty.appendChild(o);
+                    }
+                }
+            }
+            
+            rebuildQty();
+            selInv.addEventListener('change', rebuildQty);
+
+            // Set max date for borrow date to today
+            document.querySelector('input[name="borrow_date"]').max = new Date().toISOString().slice(0, 10);
+        })();
+
+        function validateBorrow() {
+            const memberId = document.querySelector('input[name="member_id"]').value;
+            if (!memberId) {
+                alert('ไม่สามารถบันทึกรายการได้: ไม่พบรหัสสมาชิก');
+                return false;
+            }
+
+            const selInv = document.getElementById('inv');
+            const selQty = document.getElementById('qty');
+            
+            const invName = selInv.options[selInv.selectedIndex].textContent;
+            const qty = selQty.value;
+
+            if (!qty) {
+                alert('โปรดเลือกจำนวนอุปกรณ์ที่ต้องการยืม');
+                return false;
+            }
+
+            return confirm(`ยืนยันการยืมอุปกรณ์: ${invName} จำนวน ${qty} ชิ้น ใช่หรือไม่?`);
+        }
+    </script>
+    <%- include('partials/footer') %>
+</body>
+</html>

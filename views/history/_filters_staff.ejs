@@ -1,0 +1,20 @@
+<%- include('../partials/head') %>
+<form class="row g-3 align-items-end" method="get" action="/staff/history">
+  <div class="col-12 col-lg-5">
+    <label class="form-label">สมาชิก</label>
+    <input type="text" class="form-control" name="member" value="<%= filters.member || '' %>">
+    <% if (member) { %><div class="form-text">เลือก: <%= member.full_name %></div><% } %>
+  </div>
+  <div class="col-6 col-lg-3">
+    <label class="form-label">จากวันที่</label>
+    <input type="date" class="form-control" name="from" value="<%= filters.from || '' %>">
+  </div>
+  <div class="col-6 col-lg-3">
+    <label class="form-label">ถึงวันที่</label>
+    <input type="date" class="form-control" name="to" value="<%= filters.to || '' %>">
+  </div>
+  <div class="col-12 col-lg-1 d-grid">
+    <button class="btn btn-primary">ค้นหา</button>
+  </div>
+</form>
+ <%- include('../partials/footer') %>

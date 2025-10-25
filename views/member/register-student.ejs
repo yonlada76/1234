@@ -1,0 +1,123 @@
+<!--หน้ากรอกข้อมูลนักศึกษา-->
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <title>สมัครสมาชิกนักศึกษา</title>
+  <%- include('partials/head') %>
+  <style>
+    body{background:#f8f9fa;font-family:"Prompt",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial}
+    .page-wrap{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px}
+    .card{border:0;border-radius:18px;box-shadow:0 12px 30px rgba(0,0,0,.08)}
+    .form-label{font-weight:600}
+    .header-badge{display:inline-flex;align-items:center;gap:.5rem;background:#eaf8f0;color:#198754;border-radius:999px;padding:.35rem .75rem;font-weight:600}
+    .btn-lg{border-radius:12px;padding:.9rem 1rem}
+    .req::after{content:" *";color:#dc3545}
+  </style>
+</head>
+<body>
+  <div class="page-wrap">
+    <div class="container" style="max-width:640px">
+      <div class="card overflow-hidden">
+        <div class="p-4 p-md-5">
+          <div class="mb-3">
+            <span class="header-badge">👩‍🎓 สมัครสมาชิก (นักศึกษา)</span>
+          </div>
+          <h2 class="fw-bold mb-2">กรอกข้อมูลเพื่อสมัคร</h2>
+          <p class="text-muted mb-4">
+            ใช้อีเมลมหาวิทยาลัย และรหัสนักศึกษา 12 หลัก ระบบจะสร้าง QR Code จากรหัสนักศึกษาของคุณ
+          </p>
+
+          <form action="/register/student" method="post" id="studentForm"
+                class="row g-3 needs-validation" novalidate>
+            <div class="col-12">
+              <label class="form-label req">อีเมล</label>
+              <div class="input-group">
+                <span class="input-group-text">@</span>
+                <input type="email" name="email" class="form-control" required>
+                <div class="invalid-feedback">กรุณากรอกอีเมลมหาวิทยาลัยให้ถูกต้อง</div>
+              </div>
+            </div>
+
+            <!-- บรรทัดนี้จะเป็น 2 คอลัมน์บนจอ md ขึ้นไป และ 1 คอลัมน์บนมือถือ -->
+            <div class="col-12 col-md-6">
+              <label class="form-label req">รหัสนักศึกษา (12 หลัก)</label>
+              <input type="text" name="student_id" class="form-control"
+                     maxlength="12" required>
+              <div class="invalid-feedback">กรุณากรอกรหัสนักศึกษา 12 หลักเป็นตัวเลข</div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label req">คณะ</label>
+              <select name="faculty" class="form-select" required>
+                <option value="" selected disabled>-- เลือกคณะ --</option>
+                <option value="FST">วิทยาศาสตร์และเทคโนโลยี</option>
+                <option value="FIE">ครุศาสตร์อุตสาหกรรม</option>
+                <option value="FHT">เทคโนโลยีคหกรรมศาสตร์</option>
+                <option value="FBA">บริหารธุรกิจ</option>
+                <option value="FENG">วิศวกรรมศาสตร์</option>
+                <option value="FTI">อุตสาหกรรมสิ่งทอ</option>
+              </select>
+              <div class="invalid-feedback">กรุณาเลือกคณะ</div>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label req">ชื่อ-นามสกุล</label>
+              <input type="text" name="full_name" class="form-control" required>
+              <div class="invalid-feedback">กรุณากรอกชื่อ-นามสกุล</div>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label req">เบอร์โทรศัพท์</label>
+              <input type="tel" name="phone" class="form-control" required>
+              <div class="invalid-feedback">กรุณากรอกเบอร์โทรศัพท์</div>
+            </div>
+
+            <div class="col-12 d-grid mt-2">
+              <button type="submit" class="btn btn-success btn-lg">สมัครสมาชิก</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <p class="text-center text-muted small mt-3 mb-0">
+        มีปัญหาในการสมัคร? ติดต่อเจ้าหน้าที่ประจำศูนย์
+      </p>
+    </div>
+  </div>
+
+  <!-- Bootstrap bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Front-end validation -->
+  <script>
+    (function () {
+      const form = document.getElementById('studentForm');
+      form.addEventListener('submit', function (e) {
+        const email = form.email.value.trim();
+        const studentId = form.student_id.value.trim();
+        const emailOk = email.endsWith('@mail.rmutk.ac.th');
+        const idOk = /^[0-9]{12}$/.test(studentId);
+        const facultyOk = !!form.faculty.value;
+
+        let ok = true;
+        if (!emailOk)   { ok=false; form.email.classList.add('is-invalid'); }
+        if (!idOk)      { ok=false; form.student_id.classList.add('is-invalid'); }
+        if (!facultyOk) { ok=false; form.faculty.classList.add('is-invalid'); }
+
+        if (!ok || !form.checkValidity()) {
+          e.preventDefault(); e.stopPropagation();
+        }
+        form.classList.add('was-validated');
+      });
+
+      ['email','student_id','full_name','phone','faculty'].forEach(n=>{
+        const el = document.querySelector(`[name="${n}"]`);
+        if(!el) return;
+        el.addEventListener('input', ()=> el.classList.remove('is-invalid'));
+        el.addEventListener('change', ()=> el.classList.remove('is-invalid'));
+      });
+    })();
+  </script>
+   <%- include('partials/footer') %>
+</body>
+</html>

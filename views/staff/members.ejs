@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="th">
+<head>
+    <title>รายชื่อสมาชิก</title>
+    <%- include('partials/head') %>
+    <style>
+        /* ========================================================================= */
+        /* =========================== STYLES: GLOBAL/VARS ========================= */
+        /* ========================================================================= */
+        :root{
+            --brand: #1f8a4c;
+            --brand-dark: #166a39;
+            --bg: #f5f7fa; /* Light Background */
+            --card: #ffffff;
+            --ink: #1e293b;
+            --line: #e4e7eb;
+            --shadow-md: 0 6px 20px rgba(0,0,0,.08);
+            --border-radius: 16px;
+        }
+        body{font-family:'Prompt',sans-serif;background:var(--bg);color:var(--ink)}
+        .wrap{max-width:1100px;margin:40px auto;padding-inline:15px}
+
+        /* Card Style */
+        .cardx{
+            background:var(--card);
+            border: 1px solid #d1d5db;
+            border-radius:var(--border-radius);
+            padding:25px;
+            box-shadow:var(--shadow-md);
+        }
+        h2{font-weight:700; color:var(--ink); font-size: 1.7rem;}
+        
+        /* Buttons */
+        .btn-outline-secondary {border-color: #d1d5db; color: #4b5563; font-weight: 500;}
+        .btn-outline-secondary:hover {background-color: #f3f4f6; color: #1e293b;}
+
+        /* Badges (Adjusted to VARS) */
+        .badge-st{
+            background:#ecfdf5; /* Light Green */
+            color:#166a39;
+            border:1px solid #a7f3d0;
+            border-radius:999px;
+            padding:.3rem .7rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .badge-ex{
+            background:#fef2f2; /* Light Red */
+            color:#b91c1c;
+            border:1px solid #fca5a5;
+            border-radius:999px;
+            padding:.3rem .7rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .mono{
+            font-family:ui-monospace,monospace;
+            font-weight: 600;
+            color: #475569; /* Darker mono color */
+        }
+
+        /* Table Styling */
+        .table{margin-bottom: 0;}
+        .table thead th {
+            background: #f1f5f9; /* Soft header background */
+            color: #475569;
+            font-weight: 600;
+            border-bottom: 2px solid var(--line);
+        }
+        .table td {
+            vertical-align: middle;
+            padding: 12px 10px;
+            font-size: 0.95rem;
+        }
+        .table-hover tbody tr:hover {
+            background-color: #f7f9fc;
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-0"><i class="bi bi-people-fill me-2 text-primary"></i> รายชื่อสมาชิก</h2>
+        <a href="/staff-home" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> กลับหน้าเจ้าหน้าที่</a>
+    </div>
+
+    <div class="cardx">
+        <% if (!members || !members.length) { %>
+            <div class="text-center text-muted p-4">
+                <i class="bi bi-info-circle me-1"></i> — ยังไม่มีสมาชิก —
+            </div>
+        <% } else { %>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 25%;">ชื่อ-นามสกุล</th>
+                            <th style="width: 12%;">ประเภท</th>
+                            <th style="width: 15%;">รหัสสมาชิก</th>
+                            <th style="width: 25%;">อีเมล</th>
+                            <th style="width: 15%;">สมัครเมื่อ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% members.forEach(m => { %>
+                            <tr>
+                                <td><b class="text-dark"><%= m.full_name %></b></td>
+                                <td>
+                                    <% if (m.member_type === 'student') { %>
+                                        <span class="badge-st">นักศึกษา</span>
+                                    <% } else if (m.member_type === 'external') { %>
+                                        <span class="badge-ex">ภายนอก</span>
+                                    <% } else { %>
+                                        <span class="badge bg-secondary"><%= m.member_type %></span>
+                                    <% } %>
+                                </td>
+                                <td class="mono">
+                                    <% /* แสดงรหัสนักศึกษาสำหรับ student, รหัสประชาชนสำหรับ external/other */ %>
+                                    <%= m.member_type === 'student' ? (m.student_id || '-') : (m.citizen_id || '-') %>
+                                </td>
+                                <td class="text-muted"><%= m.email %></td>
+                                <td class="text-muted"><%= m.created_at ? new Date(m.created_at).toLocaleDateString('th-TH') : '-' %></td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+            <div class="text-end text-muted small mt-3">
+                รวมสมาชิก: <b><%= members.length %></b> คน
+            </div>
+        <% } %>
+    </div>
+</div>
+<%- include('partials/footer') %>
+</body>
+</html>

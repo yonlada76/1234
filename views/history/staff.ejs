@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="th">
+<head>
+    <title>ประวัติสมาชิก (เจ้าหน้าที่)</title>
+    <%- include('../partials/head') %>
+    <style>
+        /* =========================== STYLES: GLOBAL/VARS ========================= */
+        :root {
+            --brand: #1f8a4c;
+            --brand-dark: #166a39;
+            --bg: #f5f7fa;
+            --ink: #1e293b;
+            --line: #e4e7eb;
+            --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.08);
+            --card-bg: #ffffff;
+        }
+        body { font-family: 'Prompt', sans-serif; background: var(--bg); color: var(--ink); }
+        .container { max-width: 1200px; } /* ขยายความกว้าง */
+        
+        /* Header */
+        h3 { 
+            font-weight: 700; 
+            color: var(--brand-dark); 
+            font-size: 1.7rem; 
+        }
+        h5 { 
+            font-weight: 700; 
+            color: #475569; 
+            border-bottom: 2px solid #f1f5f9; /* เส้นคั่นอ่อนๆ */
+            padding-bottom: 8px;
+            margin-bottom: 15px !important;
+        }
+
+        /* Card Style */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid #d1d5db;
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            padding: 25px !important; /* เพิ่ม padding */
+        }
+        
+        /* Buttons */
+        .btn-outline-secondary {
+            border-color: #d1d5db;
+            color: #4b5563;
+            font-weight: 500;
+        }
+        .btn-outline-secondary:hover {
+            background-color: #f3f4f6;
+            color: #1e293b;
+        }
+        
+        /* Filter Card specific style */
+        .card-filters {
+            background: #eef2f6; /* สีอ่อนสำหรับส่วน Filters */
+            border: 1px dashed #c7d2fe; /* เส้นประ */
+            padding: 20px !important;
+        }
+        .card-filters h5 {
+            border-bottom: none;
+            color: var(--brand-dark);
+            margin-bottom: 0;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="mb-0"><i class="bi bi-person-lines-fill me-2"></i>ประวัติสมาชิก (เจ้าหน้าที่)</h3>
+            <a href="/staff-home" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> กลับหน้าหลัก</a>
+        </div>
+
+        <div class="card card-filters p-3 mb-4">
+            <%- include('_filters_staff', { filters, member }) %>
+        </div>
+
+        <div class="card p-3 mb-4">
+            <h5><i class="bi bi-basket2-fill me-1"></i> ประวัติการยืม–คืนอุปกรณ์</h5>
+            <%- include('_table_borrow', { rows: borrowRows, showMemberCols: true, staffActions: true }) %>
+        </div>
+
+        <div class="card p-3">
+            <h5><i class="bi bi-bicycle me-1"></i> ประวัติการเข้าใช้ฟิตเนส</h5>
+            <%- include('_table_fitness', { rows: fitnessRows, showMemberCols: true }) %>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <%- include('../partials/footer') %>
+</body>
+</html>

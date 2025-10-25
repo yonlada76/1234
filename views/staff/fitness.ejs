@@ -1,0 +1,199 @@
+<!-- หน้าฟิตเน็ตviews/fitness.ejs -->
+<%
+  // server ควรส่ง { member } เข้ามา
+  const m         = member || null;                   // { id, full_name, member_type:'student'|'external', email? }
+  const isStudent = m?.member_type === 'student';
+  const fee       = isStudent ? 5 : 30;
+  const today     = new Date().toISOString().slice(0,10);
+%>
+<!doctype html>
+<html lang="th">
+<head>
+  <title>เข้าใช้ฟิตเน็ต</title>
+   <%- include('partials/head') %>
+  <style>
+    :root{
+      --brand:#16a34a;      /* เขียวสด */
+      --ink:#111827;
+      --muted:#6b7280;
+      --card:#ffffff;
+      --bg:#f5f7fb;
+      --ring:#e5e7eb;
+      --accent:#fbbf24;
+    }
+    *{box-sizing:border-box}
+    body{font-family:'Prompt',sans-serif;background:var(--bg);color:var(--ink)}
+    .container-max{max-width:1100px}
+    .page-title{font-weight:700;font-size:clamp(1.25rem,2vw,1.6rem)}
+    .grid{display:grid;grid-template-columns:1fr;gap:22px}
+    @media(min-width:992px){.grid{grid-template-columns:1.05fr .95fr}}
+    .cardx{background:var(--card);border-radius:18px;padding:22px;box-shadow:0 12px 30px rgba(0,0,0,.07);border:1px solid var(--ring)}
+    .subtle{color:var(--muted)}
+    .chip{display:inline-flex;align-items:center;gap:6px;padding:.32rem .7rem;border-radius:999px;background:#ecfdf5;color:#065f46;font-weight:600;border:1px solid #d1fae5}
+    .avatar{width:112px;height:112px;border-radius:16px;background:linear-gradient(180deg,#fff,#f8fafc);border:1px solid var(--ring);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(0,0,0,.05)}
+    .avatar svg{width:58px;height:58px;color:#94a3b8}
+    .btn-brand{background:var(--brand);border:none;font-weight:700}
+    .btn-brand:hover{filter:brightness(.98)}
+    .btn-accent{background:var(--accent);border:none;color:#111;border-radius:999px;font-weight:700}
+    .field{border-radius:12px;border:1px solid var(--ring);padding:.7rem .9rem}
+    .divider{height:1px;background:var(--ring);margin:12px 0}
+    .kpi{display:flex;gap:14px}
+    .kpi .item{flex:1;border:1px dashed var(--ring);border-radius:12px;padding:10px 12px;background:#fafafa}
+    .kpi .item b{font-size:1.05rem}
+    .receipt{border-radius:14px;border:1px dashed var(--ring);background:#fcfdfd;padding:12px}
+    .receipt .row{display:flex;justify-content:space-between;margin:.15rem 0}
+    .link{color:#2563eb;text-decoration:none}
+    .link:hover{text-decoration:underline}
+    .floating{position:fixed;inset:auto 16px 16px auto;z-index:30}
+  </style>
+</head>
+<body>
+  <div class="container container-max py-3 py-lg-4">
+    <!-- header -->
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <div class="d-flex align-items-center gap-3">
+        <h1 class="page-title mb-0">เข้าใช้ฟิตเน็ต</h1>
+        <% if (m) { %>
+          <span class="chip"><span>สถานะ</span> <strong><%= isStudent ? 'นักศึกษา' : 'บุคคลภายนอก' %></strong></span>
+        <% } %>
+      </div>
+      <a class="link" href="/staff-home">← กลับหน้าเจ้าหน้าที่</a>
+    </div>
+
+    <!-- หากยังไม่สแกน -->
+    <% if (!m) { %>
+      <div class="cardx text-center">
+        <div class="mb-3"><span class="chip">ยังไม่พบสมาชิก</span></div>
+        <p class="subtle mb-1">โปรดกลับไปที่หน้าเจ้าหน้าที่แล้วกด “ฟิตเนส” เพื่อสแกน QR สมาชิก</p>
+        <p class="subtle">รองรับกล้องมือถือบน HTTPS (เช่น ngrok)</p>
+        <div class="mt-2"><a href="/staff-home" class="btn btn-brand">ไปสแกน QR</a></div>
+      </div>
+    <% } %>
+
+    <% if (m) { %>
+    <div class="grid">
+      <!-- ซ้าย: ข้อมูลสมาชิก + KPI + สลิปย่อ -->
+      <div class="cardx">
+        <div class="d-flex align-items-center gap-3">
+          <div class="avatar">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.4"
+                d="M15.75 7.5a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 19.5a7.5 7.5 0 0 1 15 0"/>
+            </svg>
+          </div>
+          <div>
+            <div class="subtle">สมาชิก</div>
+            <div class="fw-semibold fs-5"><%= m.full_name %></div>
+            <div class="subtle small"><%= m.email || '-' %></div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="kpi">
+          <div class="item">
+            <div class="subtle small">ประเภท</div>
+            <b><%= isStudent ? 'นักศึกษา' : 'บุคคลภายนอก' %></b>
+          </div>
+          <div class="item">
+            <div class="subtle small">ค่าบริการต่อครั้ง</div>
+            <b><%= fee %> ฿</b>
+          </div>
+          <div class="item">
+            <div class="subtle small">วันที่วันนี้</div>
+            <b><%= today %></b>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="receipt" id="rcp">
+          <div class="subtle mb-1">สรุปสลิปย่อ</div>
+          <div class="row"><span>ชื่อ</span> <b><%= m.full_name %></b></div>
+          <div class="row"><span>วันที่เข้าใช้</span> <b id="rcp-date"><%= today %></b></div>
+          <div class="row"><span>วิธีชำระเงิน</span> <b id="rcp-pay">เงินสด</b></div>
+          <div class="row"><span>จำนวนเงิน</span> <b id="rcp-amt"><%= fee %> ฿</b></div>
+        </div>
+      </div>
+
+      <!-- ขวา: ฟอร์มบันทึก -->
+      <div class="cardx">
+        <form method="post" action="/fitness/submit" id="fitForm" class="needs-validation" novalidate>
+          <input type="hidden" name="member_id"   value="<%= m.id %>">
+          <input type="hidden" name="member_type" value="<%= isStudent ? 'student' : 'external' %>">
+
+          <div class="mb-3">
+            <label class="form-label">วันที่เข้าใช้</label>
+            <input type="date" name="visit_date" class="form-control field" value="<%= today %>" required>
+            <div class="invalid-feedback">กรุณาเลือกวันที่เข้าใช้</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">ค่าบริการ (บาท)</label>
+            <input type="number" name="amount" class="form-control field" value="<%= fee %>" min="0" step="1" required>
+            <div class="form-text subtle"><%= isStudent ? 'อัตรานักศึกษา 5 บาท/ครั้ง' : 'อัตราบุคคลภายนอก 30 บาท/ครั้ง' %></div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label d-block">วิธีชำระเงิน</label>
+            <div class="d-flex gap-3">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="pay_method" id="cash" value="cash" checked>
+                <label class="form-check-label" for="cash">เงินสด</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="pay_method" id="qr" value="qr">
+                <label class="form-check-label" for="qr">สแกน QR</label>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn btn-accent w-100 py-2" type="submit" id="btnSubmit">บันทึกการเข้าใช้</button>
+          <div class="subtle text-center mt-2">ระบบจะส่งแจ้งเตือนไปยังสมาชิกและพากลับหน้าเจ้าหน้าที่</div>
+        </form>
+      </div>
+    </div>
+    <% } %>
+  </div>
+
+  <!-- toast แจ้งบันทึก (แสดงจากฝั่ง server ผ่าน query ?ok=fitness ก็ได้) -->
+  <% if (typeof ok !== 'undefined' && ok === 'fitness') { %>
+  <div class="floating alert alert-success shadow">บันทึกการเข้าใช้ฟิตเน็ตเรียบร้อย 🎉</div>
+  <% } %>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // อัปเดตสลิปย่อแบบเรียลไทม์
+    const form = document.getElementById('fitForm');
+    const dateEl = form?.querySelector('input[name="visit_date"]');
+    const amtEl  = form?.querySelector('input[name="amount"]');
+    const payEls = form?.querySelectorAll('input[name="pay_method"]');
+
+    function updateReceipt(){
+      if (dateEl) document.getElementById('rcp-date').textContent = dateEl.value || '-';
+      if (amtEl)  document.getElementById('rcp-amt').textContent  = (amtEl.value || 0) + ' ฿';
+      if (payEls){
+        const v = [...payEls].find(r=>r.checked)?.value === 'qr' ? 'สแกน QR' : 'เงินสด';
+        document.getElementById('rcp-pay').textContent = v;
+      }
+    }
+    dateEl?.addEventListener('input', updateReceipt);
+    amtEl?.addEventListener('input', updateReceipt);
+    payEls?.forEach(r=>r.addEventListener('change', updateReceipt));
+    updateReceipt();
+
+    // ป้องกันกดซ้ำ + ตรวจฟอร์ม
+    form?.addEventListener('submit', (e)=>{
+      if (!form.checkValidity()){
+        e.preventDefault(); e.stopPropagation();
+        form.classList.add('was-validated');
+        return;
+      }
+      const btn = document.getElementById('btnSubmit');
+      btn.disabled = true;
+      btn.textContent = 'กำลังบันทึก...';
+    });
+  </script>
+   <%- include('partials/footer') %>
+</body>
+</html>

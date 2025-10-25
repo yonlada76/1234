@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="th">
+<head>
+    <title>ประวัติของฉัน</title>
+    <%- include('../partials/head') %>
+    <style>
+        /* =========================== STYLES: GLOBAL/VARS ========================= */
+        :root {
+            --brand: #1f8a4c;
+            --brand-dark: #166a39;
+            --bg: #f5f7fa;
+            --ink: #1e293b;
+            --line: #e4e7eb;
+            --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.08);
+            --card-bg: #ffffff;
+            --color-warning: #f59e0b; /* Amber */
+            --color-danger: #dc2626;
+        }
+        body { font-family: 'Prompt', sans-serif; background: var(--bg); color: var(--ink); }
+        .container { max-width: 900px; } /* จำกัดความกว้างให้เหมาะสม */
+
+        /* Header & Titles */
+        h3 { 
+            font-weight: 700; 
+            color: var(--brand-dark); 
+            font-size: 1.7rem; 
+        }
+        h5 { 
+            font-weight: 700; 
+            color: #475569; 
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 8px;
+            margin-bottom: 15px !important;
+        }
+
+        /* Card Style */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid #d1d5db;
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            padding: 25px !important;
+            margin-bottom: 20px !important;
+        }
+        
+        /* Buttons */
+        .btn-outline-secondary {
+            border-color: #d1d5db;
+            color: #4b5563;
+            font-weight: 500;
+        }
+        .btn-outline-secondary:hover {
+            background-color: #f3f4f6;
+            color: #1e293b;
+        }
+        
+        /* =========================== STYLES: OUTSTANDING TABLE ========================= */
+        .outstanding-card {
+            border: 1px solid var(--color-warning) !important; /* เน้นด้วยเส้นขอบสีเหลือง */
+            background-color: #fffbeb !important; /* พื้นหลังสีอ่อน */
+        }
+        .outstanding-alert {
+            font-weight: 600;
+            border-radius: 10px;
+            border-color: var(--color-warning) !important;
+            background-color: #fff7e6 !important;
+            color: #b45309 !important;
+        }
+        .outstanding-table {
+            background: white !important;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #ffedd5;
+        }
+        .outstanding-table thead th {
+            background: var(--color-warning) !important; 
+            color: white !important;
+            font-weight: 600;
+            padding: 10px 12px;
+        }
+        .outstanding-table td {
+            font-size: 0.9rem;
+        }
+        .outstanding-table td.col-num { text-align: center; font-variant-numeric: tabular-nums; }
+        .outstanding-table td.col-out { font-weight: 700; color: var(--color-danger); }
+        
+    </style>
+</head>
+<body>
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0"><i class="bi bi-person-bounding-box me-2"></i>ประวัติของฉัน</h3>
+        <a href="/student-home" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> กลับหน้าหลัก
+        </a>
+    </div>
+
+    <% if (outRows && outRows.length) { %>
+        <div class="alert outstanding-alert mb-4">
+            ⚠️ คุณมีรายการอุปกรณ์ **ค้างคืน** จำนวน <strong><%= outRows.length %></strong> รายการ โปรดนำมาคืนโดยเร็ว
+        </div>
+
+        <div class="card outstanding-card mb-4 p-4">
+            <h5 class="mb-3 text-warning">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i> รายการที่ยังไม่คืน
+            </h5>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle outstanding-table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>อุปกรณ์</th>
+                            <th class="col-num">จำนวนยืม</th>
+                            <th class="col-num">คืนแล้ว</th>
+                            <th class="col-num">คงค้าง</th>
+                            <th>ยืมเมื่อ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% outRows.forEach(o => { %>
+                            <tr>
+                                <td><b><%= o.item_name %></b></td>
+                                <td class="col-num"><%= o.borrowed_qty %></td>
+                                <td class="col-num"><%= o.returned_qty %></td>
+                                <td class="col-num col-out"><%= o.outstanding_qty %></td>
+                                <td><%= new Date(o.borrow_date).toLocaleDateString('th-TH') %></td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    <% } %>
+
+    <div class="card p-4">
+        <h5 class="mb-3"><i class="bi bi-box-seam-fill me-1 text-primary"></i> ประวัติการยืม–คืนอุปกรณ์</h5>
+        <%- include('_table_borrow', { rows: borrowRows, showMemberCols: false, staffActions: false }) %>
+    </div>
+    
+    <div class="card p-4 mt-4">
+        <h5 class="mb-3"><i class="bi bi-bicycle me-1 text-success"></i> ประวัติการเข้าใช้ฟิตเนส</h5>
+        <%- include('_table_fitness', { rows: fitnessRows, showMemberCols: false }) %>
+    </div>
+
+</div>
+<%- include('../partials/footer') %>
+</body>
+</html>

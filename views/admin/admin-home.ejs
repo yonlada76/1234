@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="th">
+<head>
+    <title>Admin Dashboard</title>
+    <%- include('../partials/head') %>
+    <style>
+        /* ========================================================================= */
+        /* =========================== STYLES: GLOBAL/VARS ========================= */
+        /* ========================================================================= */
+        :root {
+            --brand: #1f8a4c;
+            --brand-dark: #166a39;
+            --bg: #f5f7fa;
+            --ink: #1e293b;
+            --line: #e4e7eb;
+            --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.08);
+            --color-primary-dark: #1e3a8a; /* Dark Blue for Stat Headers */
+            --color-danger-dark: #b91c1c;
+        }
+        body { font-family: 'Prompt', sans-serif; background: var(--bg); color: var(--ink); }
+        .wrap { max-width: 1200px; margin: 40px auto; padding: 0 15px; }
+        
+        /* LAYOUT */
+        .grid-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .grid-tasks {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        @media(max-width: 992px) {
+            .grid-stats { grid-template-columns: repeat(2, 1fr); }
+            .grid-tasks { grid-template-columns: 1fr; }
+        }
+        @media(max-width: 576px) {
+            .grid-stats { grid-template-columns: 1fr; }
+        }
+        
+        /* CARD & STAT STYLES */
+        .card-custom {
+            background: #fff;
+            border: 1px solid #d1d5db;
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            padding: 24px;
+        }
+        
+        .stat-box {
+            padding: 18px;
+            border-radius: 12px;
+            border: 1px solid #d1d5db;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .stat-box div {
+            font-size: 14px;
+            color: var(--muted, #64748b);
+            margin-bottom: 4px;
+        }
+        .stat-box h3 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 800;
+        }
+        
+        /* Specific Stat Colors (using custom properties or specific classes) */
+        .stat-user-total { background:#eef2ff; border-color:#c7d2fe; color:var(--color-primary-dark) }
+        .stat-inv-active { background:#e0f2fe; border-color:#7dd3fc; color:#0369a1 }
+        .stat-outstand { background:#fefce8; border-color:#fde047; color:#a16207 }
+        .stat-overdue7 { background:#fee2e2; border-color:#fca5a5; color:var(--color-danger-dark) }
+
+        .stat-box-small h3 { font-size: 20px; font-weight: 700; color: #475569; }
+        .stat-box-small { background: #f9fafb !important; }
+        
+        /* LIST STYLES */
+        .list-group-item {
+            border-radius: 10px;
+            margin-bottom: 8px;
+            padding: 12px 16px;
+            border: 1px solid var(--line);
+        }
+        .list-group-item:hover { background-color: #f7f9fc; }
+        .text-muted-task { font-size: 0.85rem; color: #94a3b8; }
+
+        /* BUTTONS */
+        .btn-primary { background-color: var(--brand); border-color: var(--brand); font-weight: 600; }
+        .btn-secondary { background-color: #475569; border-color: #475569; font-weight: 600; }
+        .btn-danger { background-color: var(--color-danger-dark); border-color: var(--color-danger-dark); font-weight: 600; }
+        
+        /* TABLE STYLES */
+        .table { border-radius: 8px; overflow: hidden; }
+        .table thead th { background: #1e293b !important; color: white !important; font-weight: 600; }
+        .table td { font-size: 0.9rem; }
+        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem; }
+        
+        /* UTILS */
+        .text-primary { color: var(--brand) !important; }
+        .text-secondary { color: #475569 !important; }
+    </style>
+</head>
+<body>
+<div class="container wrap">
+    <h1 class="mb-1 text-primary"><i class="bi bi-speedometer2 me-2"></i> Admin Dashboard</h1>
+    <div class="text-muted mb-4 fs-6">สวัสดี <strong><%= me?.name || '-' %></strong> (Role: <span class="badge bg-primary"><%= me?.role %></span>)</div>
+
+    <div class="grid-stats">
+        <div class="stat-box stat-user-total">
+            <div>ผู้ใช้ทั้งหมด</div>
+            <h3 style="color:var(--color-primary-dark)"><%= stats.usersTotal %></h3>
+        </div>
+        <div class="stat-box stat-inv-active">
+            <div>อุปกรณ์ (Active)</div>
+            <h3 style="color:#0369a1"><%= stats.invActive %></h3>
+        </div>
+        <div class="stat-box stat-outstand">
+            <div>ค้างคืน (ทั้งหมด)</div>
+            <h3 style="color:#a16207"><%= stats.outstanding %></h3>
+        </div>
+        <div class="stat-box stat-overdue7">
+            <div>ค้าง 7+ วัน</div>
+            <h3 style="color:var(--color-danger-dark)"><%= stats.overdue7plus %></h3>
+        </div>
+    </div>
+    
+    <h4 class="mb-3 text-secondary"><i class="bi bi-pie-chart-fill me-1"></i> ภาพรวมผู้ใช้</h4>
+    <div class="grid-stats" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="stat-box stat-box-small stat-user-total"><div>นศ.</div><h3><%= stats.usersStudent %></h3></div>
+        <div class="stat-box stat-box-small stat-user-total"><div>เจ้าหน้าที่</div><h3><%= stats.usersStaff %></h3></div>
+        <div class="stat-box stat-box-small stat-user-total"><div>ผู้ดูแลระบบ</div><h3><%= stats.usersAdmin %></h3></div>
+    </div>
+
+
+    <div class="grid-tasks">
+        <div class="card-custom">
+            <h5 class="mb-3"><i class="bi bi-list-check me-2"></i> สิ่งที่ต้องทำวันนี้</h5>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between align-items-center bg-danger-subtle border-danger">
+                    เคสค้างคืน 7+ วัน (เร่งด่วน)
+                    <span class="badge rounded-pill bg-danger fs-6"><%= stats.overdue7plus %></span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center bg-warning-subtle border-warning">
+                    เคสค้างคืน 2–6 วัน (ติดตาม)
+                    <span class="badge rounded-pill bg-warning text-dark fs-6"><%= stats.overdue2_6 %></span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    ผู้ใช้ถูก Hold (ยังไม่ปลด)
+                    <span class="badge rounded-pill bg-dark fs-6"><%= stats.holds %></span>
+                </li>
+                <li class="list-group-item">
+                    <h6 class="mb-2 text-primary fw-bold"><i class="bi bi-calendar-check-fill me-1"></i> นัดคืนวันนี้:</h6>
+                    <% if (!promisedToday || !promisedToday.length) { %>
+                        <span class="text-muted fst-italic">— ไม่มีนัดคืนวันนี้ —</span>
+                    <% } else { %>
+                        <ul class="list-unstyled">
+                            <% promisedToday.forEach(p => { %>
+                                <li class="mb-1 p-2 border-bottom border-light">
+                                    <div class="d-flex justify-content-between text-muted-task">
+                                        <span class="mono fw-bold me-2">TX: <%= p.tx_id.substring(0, 8) %>...</span>
+                                        <span>ยืมเมื่อ: <%= new Date(p.borrow_date).toLocaleDateString('th-TH') %></span>
+                                    </div>
+                                    <div class="fw-bold">
+                                        <i class="bi bi-person-fill me-1"></i> <%= p.full_name %>:
+                                        <span class="text-secondary"><%= p.item_name %> × <%= p.qty %></span>
+                                    </div>
+                                </li>
+                            <% }) %>
+                        </ul>
+                    <% } %>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card-custom">
+            <h5 class="mb-3 text-secondary"><i class="bi bi-rocket-takeoff me-2"></i> ลัดไปหน้าทำงาน</h5>
+            <div class="d-grid gap-3">
+                <a class="btn btn-primary" href="/admin/users"><i class="bi bi-people-fill me-2"></i>จัดการผู้ใช้</a>
+                <a class="btn btn-secondary" href="/staff/inventory"><i class="bi bi-box-seam-fill me-2"></i>คลังอุปกรณ์</a>
+                <a class="btn btn-danger" href="/staff/outstanding"><i class="bi bi-clock-history me-2"></i>รายการค้างคืนทั้งหมด</a>
+                <a class="btn btn-outline-info" href="/members"><i class="bi bi-person-lines-fill me-2"></i>รายชื่อสมาชิก</a>
+                <button class="btn btn-outline-dark" onclick="alert('กรุณาไปที่หน้ารายการค้างคืน 7+ วันเพื่อพิมพ์เอกสาร');">
+                    <i class="bi bi-printer-fill me-2"></i>พิมพ์เอกสารค้างคืน (7+)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-custom">
+        <h5 class="mb-3 text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>เคสค้างคืน 7+ วัน (Top 10)</h5>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width:10%">TX ID</th>
+                        <th style="width:20%">ผู้ยืม</th> 
+                        <th style="width:30%">อุปกรณ์</th>
+                        <th class="text-center" style="width:10%">จำนวน</th>
+                        <th class="text-center" style="width:15%">เกินกำหนด (วัน)</th>
+                        <th style="width:15%">ดำเนินการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (!urgent || !urgent.length) { %>
+                        <tr><td colspan="6" class="text-center text-muted p-4">✅ ไม่มีรายการค้าง 7+ วันที่ต้องเร่งด่วน</td></tr>
+                    <% } else { %>
+                        <% urgent.forEach(r => { %>
+                            <tr>
+                                <td class="mono text-muted"><%= r.tx_id.substring(0, 8) %>...</td>
+                                <td><a href="/staff/history?member=<%= encodeURIComponent(r.user_id) %>" class="text-decoration-none fw-bold"><%= r.full_name || 'N/A' %></a></td> 
+                                <td><%= r.item_name %></td>
+                                <td class="text-center"><%= r.qty %></td>
+                                <td class="text-center">
+                                    <span class="badge text-bg-danger fs-6"><%= r.days_overdue %></span>
+                                </td>
+                                <td>
+                                    <a class="btn btn-sm btn-outline-danger me-2"
+                                        href="/reports/overdue/print?tx=<%= encodeURIComponent(r.tx_id) %>"
+                                        target="_blank" rel="noopener"><i class="bi bi-printer"></i> พิมพ์</a>
+                                    <a class="btn btn-sm btn-outline-primary"
+                                        href="/staff/history?member=<%= encodeURIComponent(r.user_id) %>"><i class="bi bi-person-lines-fill"></i> ประวัติ</a>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<%- include('../partials/footer') %>
+</body>
+</html>

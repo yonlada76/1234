@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <title>รายการอุปกรณ์ | เจ้าหน้าที่</title>
+    <%- include('partials/head') %>
+    <style>
+        /* ========================================================================= */
+        /* =========================== STYLES: GLOBAL/VARS ========================= */
+        /* ========================================================================= */
+        :root {
+            --brand: #1f8a4c;
+            --brand-dark: #166a39;
+            --bg: #f5f7fa;
+            --card: #ffffff;
+            --ink: #1e293b;
+            --line: #e4e7eb;
+            --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.08);
+            --border-radius: 12px;
+        }
+
+        body{font-family:'Prompt',sans-serif;background:var(--bg);color:var(--ink)}
+        .wrap{
+            max-width:1100px;
+            margin:40px auto;
+            background:var(--card);
+            border-radius:var(--border-radius);
+            box-shadow:var(--shadow-md);
+            padding:30px;
+        }
+        h3{font-weight:700; color:var(--ink); font-size: 1.5rem;}
+
+        /* Buttons */
+        .btn-primary {background-color: var(--brand); border-color: var(--brand);}
+        .btn-primary:hover {background-color: var(--brand-dark); border-color: var(--brand-dark);}
+        .btn-outline-secondary {border-color: #d1d5db; color: #4b5563;}
+        .btn-outline-secondary:hover {background-color: #f3f4f6; color: #1e293b;}
+        .btn-sm {padding: 5px 10px; border-radius: 6px; font-size: 0.85rem;}
+
+        /* KPIs + Search */
+        .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px;margin:15px 0 25px}
+        .kpi{
+            background:#f8fafc;
+            border:1px solid #e5e7eb;
+            border-radius:var(--border-radius);
+            padding:15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,.04);
+        }
+        .kpi .v{font-weight:800;font-size:1.6rem; margin-top: 4px;}
+        .kpi .text-muted{font-size: 0.9rem;}
+        .searchbar{max-width:300px; border-radius: 8px; border-color: #d1d5db;}
+
+        /* ========================================================================= */
+        /* =========================== STYLES: Table =============================== */
+        /* ========================================================================= */
+        .table {border-collapse: separate !important;}
+        .table thead th {
+            font-weight: 600;
+            background: #f1f5f9;
+            color: #475569;
+            border-bottom: 2px solid var(--line);
+            vertical-align: middle;
+            padding: 12px 10px;
+        }
+        .sticky-head thead th{position:sticky;top:0;background:var(--table-header, #f1f5f9);z-index:10;}
+        .table tbody tr:hover{background:#fafafa}
+        .table td, .table th{vertical-align:middle; padding: 12px 10px;}
+
+        /* Content Styling */
+        .num{font-variant-numeric:tabular-nums; font-weight: 600;}
+        .ok{color:#16a34a}
+        .low{color:#d97706}
+        .out{color:#dc2626}
+        .badge{font-size: 0.75rem; font-weight: 600; padding: 4px 8px; border-radius: 4px;}
+        
+        /* Item Name Info (Adjusted) */
+        .item-name-info { 
+            text-align: left; 
+            font-weight: bold; /* ชื่ออุปกรณ์ยังคงตัวหนา */
+        }
+        
+        /* Actions: Group buttons together */
+        .actions{white-space:nowrap; display: flex; justify-content: flex-end; gap: 5px; align-items: center;}
+        .actions form{margin: 0;}
+
+        /* Modal Customization */
+        .modal-header{border-bottom: 1px solid var(--line);}
+        .modal-footer{border-top: 1px solid var(--line);}
+        .modal-title{font-weight: 600;}
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="m-0"><i class="bi bi-box-seam-fill me-2"></i>จัดการสต็อกอุปกรณ์</h3>
+            <div class="d-flex gap-2">
+                <a class="btn btn-outline-secondary" href="/staff-home">
+                    <i class="bi bi-person-badge-fill me-1"></i>หน้าเจ้าหน้าที่
+                </a>
+                <a class="btn btn-primary" href="/staff/inventory/new">
+                    <i class="bi bi-plus-circle-fill me-1"></i>เพิ่มอุปกรณ์
+                </a>
+            </div>
+        </div>
+
+        <% /* ==== Alert Messages ==== */ %>
+        <% if (success === 'created') { %>
+            <div class="alert alert-success"><i class="bi bi-check-circle-fill me-1"></i>เพิ่มอุปกรณ์เรียบร้อย</div>
+        <% } else if (success === 'archived') { %>
+            <div class="alert alert-success"><i class="bi bi-check-circle-fill me-1"></i>เก็บอุปกรณ์เข้าคลัง (ปิดใช้งานแทนการลบ) เรียบร้อย</div>
+        <% } else if (success === 'updated') { %>
+            <div class="alert alert-success"><i class="bi bi-check-circle-fill me-1"></i>อัปเดตข้อมูลเรียบร้อย</div>
+        <% } else if (success === 'deleted') { %>
+            <div class="alert alert-success"><i class="bi bi-trash-fill me-1"></i>ลบอุปกรณ์แล้ว</div>
+        <% } else if (success === 'dup') { %>
+            <div class="alert alert-warning"><i class="bi bi-exclamation-triangle-fill me-1"></i>มีชื่ออุปกรณ์นี้อยู่แล้ว</div>
+        <% } else if (success === 'fk') { %>
+            <div class="alert alert-warning"><i class="bi bi-exclamation-triangle-fill me-1"></i>ลบไม่ได้: มีประวัติการยืมอ้างถึงอุปกรณ์นี้</div>
+        <% } else if (success === 'toggled') { %>
+            <div class="alert alert-success"><i class="bi bi-check-circle-fill me-1"></i>เปลี่ยนสถานะเรียบร้อย</div>
+        <% } else if (success === 'notfound') { %>
+            <div class="alert alert-warning"><i class="bi bi-info-circle-fill me-1"></i>ไม่พบรายการ</div>
+        <% } else if (success === 'stock_underflow') { %>
+            <div class="alert alert-warning"><i class="bi bi-exclamation-octagon-fill me-1"></i>สต็อกที่บันทึกน้อยกว่ายอดคงค้าง ไม่สามารถอัปเดตได้</div>
+        <% } else if (error) { %>
+            <div class="alert alert-danger"><%= error %></div>
+        <% } %>
+
+        <% /* ==== KPI รวมยอด ==== */ %>
+        <%
+            let sumStock=0,sumOut=0,sumAvail=0;
+            (items||[]).forEach(x=>{
+                sumStock += Number(x.physical_stock||0);
+                sumOut   += Number(x.outstanding_in_use||0);
+                sumAvail += Number(x.available_for_new_borrow||0);
+            });
+        %>
+        <div class="kpis">
+            <div class="kpi">
+                <div class="text-muted">สต็อกรวมในคลัง</div>
+                <div class="v num"><%= sumStock %></div>
+            </div>
+            <div class="kpi">
+                <div class="text-muted">กำลังถูกยืมค้าง</div>
+                <div class="v num"><%= sumOut %></div>
+            </div>
+            <div class="kpi">
+                <div class="text-muted">คงเหลือพร้อมให้ยืม</div>
+                <div class="v num <%= sumAvail <= 2 ? 'low' : 'ok' %>"><%= sumAvail %></div>
+            </div>
+            <div class="d-flex align-items-center justify-content-end">
+                <input id="q" class="form-control searchbar" placeholder="🔍 ค้นหาชื่ออุปกรณ์…">
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-striped align-middle sticky-head">
+                <thead>
+                    <tr>
+                        <th class="text-start" style="width:30%">ชื่ออุปกรณ์</th>
+                        <th class="text-center" style="width:12%">สต็อกจริง</th>
+                        <th class="text-center" style="width:15%">กำลังถูกยืมค้าง</th>
+                        <th class="text-center" style="width:15%">คงเหลือให้ยืม</th>
+                        <th class="text-center" style="width:10%">สถานะ</th>
+                        <th class="text-end" style="width:18%">จัดการ</th>
+                    </tr>
+                </thead>
+                <tbody id="invBody">
+                    <% if (!items || !items.length) { %>
+                        <tr><td colspan="6" class="text-center text-muted p-4">
+                            <i class="bi bi-info-circle-fill me-1"></i> ยังไม่มีอุปกรณ์ในสต็อก
+                        </td></tr>
+                    <% } else { %>
+                        <% items.forEach(function(it){
+                            const avail = Number(it.available_for_new_borrow||0);
+                            const out   = Number(it.outstanding_in_use||0);
+                            const clsAvail = avail === 0 ? 'out' : (avail <= 2 ? 'low' : 'ok');
+                        %>
+                            <tr data-name="<%= it.item_name.toLowerCase() %>">
+                                <td class="item-name-info">
+                                    <div class="fw-bold"><%= it.item_name %></div>
+                                    
+                                    <% /* 💡 ไม่แสดงรหัสใดๆ เลยตามต้องการ */ %>
+                                    
+                                </td>
+
+                                <td class="text-center num"><strong><%= it.physical_stock %></strong></td>
+
+                                <td class="text-center num <%= out>0?'low':'' %>"><%= out %></td>
+
+                                <td class="text-center num">
+                                    <span class="fw-bold <%= clsAvail %>"><%= avail %></span>
+                                    <% if (avail===0) { %>
+                                        <span class="badge text-bg-danger ms-1">หมด</span>
+                                    <% } else if (avail<=2) { %>
+                                        <span class="badge text-bg-warning ms-1">เหลือน้อย</span>
+                                    <% } %>
+                                </td>
+
+                                <td class="text-center">
+                                    <span class="badge <%= it.active ? 'text-bg-success' : 'text-bg-secondary' %>">
+                                        <%= it.active ? 'ใช้งาน' : 'ปิด' %>
+                                    </span>
+                                </td>
+
+                                <td class="text-end actions">
+                                    <form class="d-inline" method="post" action="/staff/inventory/toggle/<%= it.id %>">
+                                        <button type="submit" class="btn btn-sm <%= it.active ? 'btn-outline-warning' : 'btn-outline-success' %>" title="<%= it.active ? 'ปิดไม่ให้ยืมชั่วคราว' : 'เปิดให้ยืม' %>">
+                                            <i class="bi bi-lock-fill"></i>
+                                        </button>
+                                    </form>
+
+                                    <button type="button" class="btn btn-sm btn-outline-dark"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#edit-<%= it.id %>" title="แก้ไขชื่อและสต็อก">
+                                        <i class="bi bi-pencil-fill"></i>
+                                    </button>
+
+                                    <form class="d-inline delete-form" method="post"
+                                            action="/staff/inventory/<%= it.id %>/delete"
+                                            data-name="<%= it.item_name %>">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="ลบถาวร">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <% if (items && items.length) { %>
+        <% items.forEach(function(it){ %>
+            <div class="modal fade" id="edit-<%= it.id %>" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form method="post" action="/staff/inventory/<%= it.id %>/edit">
+                            <div class="modal-header">
+                                <h5 class="modal-title"><i class="bi bi-pencil-square me-1"></i>แก้ไข: <%= it.item_name %></h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label">ชื่ออุปกรณ์</label>
+                                    <input type="text" name="name" class="form-control" required value="<%= it.item_name %>">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">สต็อก (จำนวนจริงในคลัง)</label>
+                                    <input type="number" name="stock" class="form-control" min="<%= it.outstanding_in_use || 0 %>" step="1" required value="<%= it.physical_stock %>">
+                                    <% if (it.outstanding_in_use > 0) { %>
+                                        <small class="form-text text-danger">⚠️ ต้องไม่น้อยกว่ายอดคงค้าง: <%= it.outstanding_in_use %></small>
+                                    <% } %>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="active-<%= it.id %>" name="active" <%= it.active ? 'checked' : '' %>>
+                                    <label class="form-check-label" for="active-<%= it.id %>">เปิดใช้งาน (อนุญาตให้ยืม)</label>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">ยกเลิก</button>
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="bi bi-save-fill me-1"></i> บันทึก
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        <% }) %>
+    <% } %>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ค้นหาแบบ live ตามชื่ออุปกรณ์
+        const q = document.getElementById('q');
+        const body = document.getElementById('invBody');
+        if (q && body) {
+            q.addEventListener('input', () => {
+                const k = q.value.trim().toLowerCase();
+                body.querySelectorAll('tr[data-name]').forEach(tr => {
+                    tr.style.display = tr.dataset.name.includes(k) ? '' : 'none';
+                });
+            });
+        }
+
+        // ยืนยันก่อนลบ
+        document.querySelectorAll('.delete-form').forEach(f=>{
+            f.addEventListener('submit', (e)=>{
+                const name = f.getAttribute('data-name') || 'รายการนี้';
+                if(!confirm(`⚠️ ยืนยันลบอุปกรณ์ "${name}" ?`)) e.preventDefault();
+            });
+        });
+    </script>
+    <%- include('partials/footer') %>
+</body>
+</html>
